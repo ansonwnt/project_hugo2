@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shamrock Admin - Menu</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin.css') }}">
+</head>
+<body>
+    <div class="admin-page">
+        <header class="admin-header">
+            <h1>Shamrock <span>Admin</span></h1>
+            <nav class="admin-nav">
+                <a href="{{ url_for('admin_dashboard') }}">Dashboard</a>
+                <a href="{{ url_for('admin_menu') }}" class="active">Menu</a>
+                <a href="{{ url_for('admin_logout') }}">Logout</a>
+            </nav>
+        </header>
+
+        <div class="admin-content">
+            <!-- Add New Item -->
+            <div class="admin-section">
+                <h2>Add Menu Item</h2>
+                <form method="POST" action="{{ url_for('admin_menu_add') }}" class="admin-form">
+                    <div class="admin-form-row">
+                        <input type="text" name="name" class="admin-input" placeholder="Item name" required>
+                        <input type="text" name="price" class="admin-input admin-input-sm" placeholder="e.g. 30 zl" required>
+                    </div>
+                    <div class="admin-form-row">
+                        <select name="category" class="admin-input" required>
+                            <option value="">Category...</option>
+                            {% for cat in categories %}
+                            <option value="{{ cat }}">{{ cat }}</option>
+                            {% endfor %}
+                            <option value="__new">+ New category</option>
+                        </select>
+                        <input type="text" id="new-cat-input" name="new_category" class="admin-input hidden" placeholder="New category name">
+                    </div>
+                    <input type="text" name="img" class="admin-input" placeholder="Image URL (optional)">
+                    <button type="submit" class="btn btn-primary">Add Item</button>
+                </form>
+            </div>
+
+            <!-- Existing Items by Category -->
+            {% for cat in categories %}
+            <div class="admin-section">
+                <h2 class="admin-cat-title">{{ cat }} <span class="admin-cat-count">({{ items|selectattr('category', 'equalto', cat)|list|length }})</span></h2>
+                <div class="admin-items-list">
+                    {% for item in items if item.category == cat %}
+                    <div class="admin-item-card">
+                        <div class="admin-item-preview">
+                            {% if item.img %}
+                            <img src="{{ item.img }}" alt="{{ item.name }}">
+                            {% else %}
+                            <div class="admin-item-no-img">?</div>
+                            {% endif %}
+                        </div>
+                        <div class="admin-item-info">
+                            <div class="admin-item-name">{{ item.name }}</div>
+                            <div class="admin-item-price">{{ item.price }}</div>
+                        </div>
+                        <div class="admin-item-actions">
+                            <button class="btn-edit" onclick="toggleEdit({{ item.id }})">Edit</button>
+                            <form method="POST" action="{{ url_for('admin_menu_delete', item_id=item.id) }}" style="display:inline" onsubmit="return confirm('Delete {{ item.name }}?')">
+                                <button type="submit" class="btn-delete">Del</button>
+                            </form>
+                        </div>
+                        <!-- Inline Edit Form (hidden) -->
+                        <form id="edit-{{ item.id }}" method="POST" action="{{ url_for('admin_menu_edit', item_id=item.id) }}" class="admin-edit-form hidden">
+                            <input type="text" name="name" value="{{ item.name }}" class="admin-input" required>
+                            <input type="text" name="price" value="{{ item.price }}" class="admin-input admin-input-sm" required>
+                            <input type="text" name="category" value="{{ item.category }}" class="admin-input" required>
+                            <input type="text" name="img" value="{{ item.img }}" class="admin-input" placeholder="Image URL">
+                            <button type="submit" class="btn btn-primary btn-small">Save</button>
+                            <button type="button" class="btn btn-secondary btn-small" onclick="toggleEdit({{ item.id }})">Cancel</button>
+                        </form>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <script>
+        // Toggle inline edit form
+        function toggleEdit(id) {
+            const form = document.getElementById('edit-' + id);
+            form.classList.toggle('hidden');
+        }
+
+        // Handle "new category" dropdown option
+        const catSelect = document.querySelector('select[name="category"]');
+        const newCatInput = document.getElementById('new-cat-input');
+        if (catSelect) {
+            catSelect.addEventListener('change', () => {
+                if (catSelect.value === '__new') {
+                    newCatInput.classList.remove('hidden');
+                    newCatInput.required = true;
+                    newCatInput.focus();
+                } else {
+                    newCatInput.classList.add('hidden');
+                    newCatInput.required = false;
+                    newCatInput.value = '';
+                }
+            });
+            // On form submit, swap new_category into category field
+            catSelect.closest('form').addEventListener('submit', (e) => {
+                if (catSelect.value === '__new' && newCatInput.value.trim()) {
+                    catSelect.innerHTML += `<option value="${newCatInput.value.trim()}" selected>${newCatInput.value.trim()}</option>`;
+                    catSelect.value = newCatInput.value.trim();
+                }
+            });
+        }
+    </script>
+</body>
+</html>

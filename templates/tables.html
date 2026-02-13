@@ -1,0 +1,2299 @@
+{% extends "base.html" %}
+
+{% block title %}Tables{% endblock %}
+
+{% block content %}
+<div class="tables-page">
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <span class="your-table">Table <span id="my-table-number">-</span></span>
+        </div>
+        <button id="checkout-btn" class="btn btn-small btn-outline">Check Out</button>
+    </header>
+
+    <!-- Notification permission banner (iOS needs user tap) -->
+    <div id="notif-banner" class="notif-banner hidden">
+        <span>Enable notifications to know when you get a drink</span>
+        <button id="notif-enable-btn" class="btn btn-small btn-primary">Enable</button>
+        <button id="notif-dismiss-btn" class="notif-dismiss">&times;</button>
+    </div>
+
+    <!-- Connection status -->
+    <div id="connection-status" class="connection-status hidden">
+        Reconnecting...
+    </div>
+
+    <!-- Table grid -->
+    <div class="table-grid-container">
+        <div class="table-grid-header">
+            <h2>Tap a table to connect</h2>
+            <button id="view-toggle" class="view-toggle-btn" title="Switch view">
+                <svg id="view-icon-map" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 6v16l7-4 8 4 7-4V2l-7 4-8-4-7 4z"/><path d="M8 2v16M16 6v16"/></svg>
+                <svg id="view-icon-grid" class="hidden" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+            </button>
+        </div>
+        <div id="table-grid" class="table-grid">
+            <!-- Tables will be rendered here -->
+        </div>
+        <div id="floor-plan-wrapper" class="floor-plan-wrapper hidden">
+            <div class="floor-tabs">
+                <button class="floor-tab active" data-floor="1">1/F</button>
+                <button class="floor-tab" data-floor="2">2/F</button>
+            </div>
+            <div id="floor-plan-1" class="floor-plan">
+                <div class="fp-element fp-door"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M3 21V3h12v18M15 12h-2"/></svg> Door</div>
+                <div class="fp-element fp-stairs"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M4 20h4v-4h4v-4h4v-4h4"/></svg> Stairs</div>
+            </div>
+            <div id="floor-plan-2" class="floor-plan hidden">
+                <div class="fp-element fp-balcony">Balcony</div>
+                <div class="fp-element fp-stairs-2f"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M4 20h4v-4h4v-4h4v-4h4"/></svg> Stairs</div>
+            </div>
+        </div>
+        <p id="empty-state" class="empty-state hidden">
+            You're the first one here! 🎉<br>Others will appear when they join.
+        </p>
+    </div>
+
+    <!-- Action Modal -->
+    <div id="action-modal" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><span id="target-table">-</span></h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <!-- Person Picker (shown when table has 2+ members) -->
+            <div id="person-picker-step" class="person-picker-step hidden">
+                <p class="person-picker-label">Who do you want to interact with?</p>
+                <div id="person-picker-list" class="person-picker-list"></div>
+            </div>
+            <!-- Step 1: Action buttons -->
+            <div id="action-step" class="action-step">
+                <button id="buy-drink-btn" class="buy-drink-btn">
+                    <span class="buy-drink-icon">🍺</span>
+                    <span>Buy a Drink</span>
+                </button>
+                <button id="rps-btn" class="rps-btn">
+                    <span class="rps-btn-icon">✊</span>
+                    <span>Rock Paper Scissors</span>
+                </button>
+                <button id="bomb-btn" class="bomb-btn">
+                    <span class="bomb-btn-icon">💣</span>
+                    <span>Bomb Pass</span>
+                </button>
+                <button id="tap-btn" class="tap-btn">
+                    <span class="tap-btn-icon">👆</span>
+                    <span>Tap Race</span>
+                </button>
+                <button id="ttol-btn" class="ttol-btn">
+                    <span class="ttol-btn-icon">🤥</span>
+                    <span>2 Truths 1 Lie</span>
+                </button>
+            </div>
+            <!-- TTOL Setup Step -->
+            <div id="ttol-setup-step" class="rps-setup-step hidden">
+                <p class="rps-setup-label">Choose game mode</p>
+                <div class="rps-mode-buttons">
+                    <button class="ttol-mode-btn" data-mode="fun">
+                        <span class="rps-mode-icon">🎮</span>
+                        <span>Just for Fun</span>
+                    </button>
+                    <button class="ttol-mode-btn" data-mode="drink">
+                        <span class="rps-mode-icon">🍺</span>
+                        <span>Play for a Drink</span>
+                    </button>
+                </div>
+            </div>
+            <!-- Tap Race Setup Step -->
+            <div id="tap-setup-step" class="rps-setup-step hidden">
+                <p class="rps-setup-label">Choose game mode</p>
+                <div class="rps-mode-buttons">
+                    <button class="tap-mode-btn" data-mode="fun">
+                        <span class="rps-mode-icon">🎮</span>
+                        <span>Just for Fun</span>
+                    </button>
+                    <button class="tap-mode-btn" data-mode="drink">
+                        <span class="rps-mode-icon">🍺</span>
+                        <span>Play for a Drink</span>
+                    </button>
+                </div>
+            </div>
+            <!-- Bomb Setup Step -->
+            <div id="bomb-setup-step" class="rps-setup-step hidden">
+                <p class="rps-setup-label">Choose game mode</p>
+                <div class="rps-mode-buttons">
+                    <button class="bomb-mode-btn" data-mode="fun">
+                        <span class="rps-mode-icon">🎮</span>
+                        <span>Just for Fun</span>
+                    </button>
+                    <button class="bomb-mode-btn" data-mode="drink">
+                        <span class="rps-mode-icon">🍺</span>
+                        <span>Play for a Drink</span>
+                    </button>
+                </div>
+            </div>
+            <!-- RPS Setup Step -->
+            <div id="rps-setup-step" class="rps-setup-step hidden">
+                <p class="rps-setup-label">Choose game mode</p>
+                <div class="rps-mode-buttons">
+                    <button class="rps-mode-btn" data-mode="fun">
+                        <span class="rps-mode-icon">🎮</span>
+                        <span>Just for Fun</span>
+                    </button>
+                    <button class="rps-mode-btn" data-mode="drink">
+                        <span class="rps-mode-icon">🍺</span>
+                        <span>Play for a Drink</span>
+                    </button>
+                </div>
+            </div>
+            <!-- Step 2: Drink menu -->
+            <div id="drink-menu-step" class="drink-menu-step hidden">
+                <div class="drink-menu-tabs">
+                    <button class="drink-tab active" data-cat="all">All</button>
+                    <button class="drink-tab" data-cat="beers">🍺 Beers</button>
+                    <button class="drink-tab" data-cat="cocktails">🍹 Cocktails</button>
+                    <button class="drink-tab" data-cat="whiskey">🥃 Whiskey</button>
+                    <button class="drink-tab" data-cat="softdrinks">🥤 Softdrinks</button>
+                    <button class="drink-tab" data-cat="snacks">🍟 Snacks</button>
+                </div>
+                <div class="drink-menu-grid" id="drink-menu-grid">
+                    <!-- Drinks injected by JS -->
+                </div>
+                <!-- Note + Send (shown after selecting a drink) -->
+                <div id="drink-send-section" class="drink-send-section hidden">
+                    <div class="note-suggestions">
+                        <button class="note-chip" data-note="Cheers! 🍻">Cheers! 🍻</button>
+                        <button class="note-chip" data-note="Enjoy! 😊">Enjoy! 😊</button>
+                        <button class="note-chip" data-note="Nice vibe! ✨">Nice vibe! ✨</button>
+                        <button class="note-chip" data-note="On me! 🥂">On me! 🥂</button>
+                    </div>
+                    <input type="text" id="drink-note" class="drink-note-input" placeholder="Or write your own note..." maxlength="100">
+                    <button id="drink-send-btn" class="btn btn-primary btn-large">Send Drink</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Incoming notification -->
+    <div id="incoming-modal" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content incoming-notification">
+            <img id="incoming-photo" class="incoming-photo hidden" src="" alt="">
+            <div class="incoming-icon" id="incoming-icon">🍺</div>
+            <p id="incoming-message">Table X sent you a drink!</p>
+            <p id="incoming-note" class="incoming-note hidden"></p>
+            <p id="incoming-queue-count" class="incoming-queue-count hidden"></p>
+            <div class="incoming-buttons">
+                <button id="decline-btn" class="btn btn-secondary">Decline ✗</button>
+                <button id="accept-btn" class="btn btn-primary">Accept ✓</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- RPS Challenge Incoming -->
+    <div id="rps-incoming-modal" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content incoming-notification">
+            <img id="rps-incoming-photo" class="incoming-photo hidden" src="" alt="">
+            <div class="incoming-icon">✊</div>
+            <p id="rps-incoming-message">Table X challenges you!</p>
+            <p id="rps-incoming-detail" class="incoming-note"></p>
+            <div class="incoming-buttons">
+                <button id="rps-decline-btn" class="btn btn-secondary">Decline</button>
+                <button id="rps-accept-btn" class="btn btn-primary">Accept</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- RPS Game Screen -->
+    <div id="rps-game-modal" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content rps-game-content">
+            <p class="rps-game-vs" id="rps-game-vs">vs Table X</p>
+            <p class="rps-game-mode" id="rps-game-mode"></p>
+            <div id="rps-choice-section" class="rps-choices">
+                <button class="rps-choice-btn" data-choice="rock">
+                    <span>✊</span>
+                    <span class="rps-choice-label">Rock</span>
+                </button>
+                <button class="rps-choice-btn" data-choice="paper">
+                    <span>✋</span>
+                    <span class="rps-choice-label">Paper</span>
+                </button>
+                <button class="rps-choice-btn" data-choice="scissors">
+                    <span>✌️</span>
+                    <span class="rps-choice-label">Scissors</span>
+                </button>
+            </div>
+            <div id="rps-waiting" class="rps-waiting hidden">
+                <div class="rps-waiting-icon">⏳</div>
+                <p>Waiting for opponent...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- RPS Result Screen -->
+    <div id="rps-result-modal" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content rps-result-content">
+            <button id="rps-result-close" class="modal-close-x">&times;</button>
+            <div id="rps-result-icon" class="rps-result-icon">🎉</div>
+            <h3 id="rps-result-title" class="rps-result-title">You won!</h3>
+            <div id="rps-result-choices" class="rps-result-choices">
+                <div class="rps-result-player">
+                    <span class="rps-result-label">You</span>
+                    <span id="rps-result-yours" class="rps-result-emoji">✊</span>
+                </div>
+                <span class="rps-result-vs">vs</span>
+                <div class="rps-result-player">
+                    <span class="rps-result-label" id="rps-result-them-label">Table X</span>
+                    <span id="rps-result-theirs" class="rps-result-emoji">✌️</span>
+                </div>
+            </div>
+            <p id="rps-result-drink" class="rps-result-drink hidden"></p>
+        </div>
+    </div>
+
+    <!-- Bomb Challenge Incoming -->
+    <div id="bomb-incoming-modal" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content incoming-notification">
+            <img id="bomb-incoming-photo" class="incoming-photo hidden" src="" alt="">
+            <div class="incoming-icon">💣</div>
+            <p id="bomb-incoming-message">Table X challenges you!</p>
+            <p id="bomb-incoming-detail" class="incoming-note"></p>
+            <div class="incoming-buttons">
+                <button id="bomb-decline-btn" class="btn btn-secondary">Decline</button>
+                <button id="bomb-accept-btn" class="btn btn-primary">Accept</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bomb Game Screen -->
+    <div id="bomb-game-modal" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content bomb-game-content">
+            <p class="rps-game-mode" id="bomb-game-mode"></p>
+            <div class="bomb-fuse-bar-track">
+                <div id="bomb-fuse-bar" class="bomb-fuse-bar"></div>
+            </div>
+            <div id="bomb-arena" class="bomb-arena">
+                <div class="bomb-player bomb-player-you" id="bomb-player-you">
+                    <div class="bomb-player-avatar">🙂</div>
+                    <span class="bomb-player-label">You</span>
+                </div>
+                <div class="bomb-flight-zone">
+                    <div id="bomb-emoji" class="bomb-emoji">💣</div>
+                </div>
+                <div class="bomb-player bomb-player-them" id="bomb-player-them">
+                    <div class="bomb-player-avatar">🙂</div>
+                    <span class="bomb-player-label" id="bomb-them-label">Table X</span>
+                </div>
+            </div>
+            <div id="bomb-status-text" class="bomb-status-text">You're holding the bomb!</div>
+            <button id="bomb-pass-btn" class="bomb-pass-btn">PASS!</button>
+            <div id="bomb-waiting" class="bomb-waiting hidden">
+                <p>They're holding it...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bomb Result Screen -->
+    <div id="bomb-result-modal" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content rps-result-content">
+            <button id="bomb-result-close" class="modal-close-x">&times;</button>
+            <div id="bomb-result-icon" class="rps-result-icon">💥</div>
+            <h3 id="bomb-result-title" class="rps-result-title">You survived!</h3>
+            <p id="bomb-result-drink" class="rps-result-drink hidden"></p>
+        </div>
+    </div>
+
+    <!-- Tap Race Challenge Incoming -->
+    <div id="tap-incoming-modal" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content incoming-notification">
+            <img id="tap-incoming-photo" class="incoming-photo hidden" src="" alt="">
+            <div class="incoming-icon">👆</div>
+            <p id="tap-incoming-message">Table X challenges you!</p>
+            <p id="tap-incoming-detail" class="incoming-note"></p>
+            <div class="incoming-buttons">
+                <button id="tap-decline-btn" class="btn btn-secondary">Decline</button>
+                <button id="tap-accept-btn" class="btn btn-primary">Accept</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tap Race Game Screen -->
+    <div id="tap-game-modal" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content tap-game-content">
+            <p class="rps-game-mode" id="tap-game-mode"></p>
+            <div class="tap-progress-track">
+                <div id="tap-progress-bar" class="tap-progress-bar"></div>
+            </div>
+            <!-- Countdown overlay -->
+            <div id="tap-countdown" class="tap-countdown hidden">
+                <span id="tap-countdown-text" class="tap-countdown-text">3</span>
+            </div>
+            <!-- Race arena -->
+            <div id="tap-arena" class="tap-arena hidden">
+                <div class="tap-lanes">
+                    <div class="tap-lane tap-lane-you">
+                        <div class="tap-lane-header">
+                            <span class="tap-lane-label">YOU</span>
+                            <span id="tap-count-you" class="tap-count">0</span>
+                        </div>
+                        <div class="tap-track">
+                            <div class="tap-track-fill" id="tap-track-you"></div>
+                            <div class="tap-runner" id="tap-runner-you">🏃</div>
+                        </div>
+                    </div>
+                    <div class="tap-lane tap-lane-them">
+                        <div class="tap-lane-header">
+                            <span class="tap-lane-label" id="tap-them-label">TABLE X</span>
+                            <span id="tap-count-them" class="tap-count">0</span>
+                        </div>
+                        <div class="tap-track">
+                            <div class="tap-track-fill" id="tap-track-them"></div>
+                            <div class="tap-runner" id="tap-runner-them">🏃</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button id="tap-tap-btn" class="tap-tap-btn hidden" disabled>TAP!</button>
+        </div>
+    </div>
+
+    <!-- Tap Race Result Screen -->
+    <div id="tap-result-modal" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content rps-result-content">
+            <button id="tap-result-close" class="modal-close-x">&times;</button>
+            <div id="tap-result-icon" class="rps-result-icon">🏆</div>
+            <h3 id="tap-result-title" class="rps-result-title">You win!</h3>
+            <p id="tap-result-scores" class="tap-result-scores"></p>
+            <p id="tap-result-drink" class="rps-result-drink hidden"></p>
+        </div>
+    </div>
+
+    <!-- TTOL Challenge Incoming -->
+    <div id="ttol-incoming-modal" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content incoming-notification">
+            <img id="ttol-incoming-photo" class="incoming-photo hidden" src="" alt="">
+            <div class="incoming-icon">🤥</div>
+            <p id="ttol-incoming-message">Table X challenges you!</p>
+            <p id="ttol-incoming-detail" class="incoming-note"></p>
+            <div class="incoming-buttons">
+                <button id="ttol-decline-btn" class="btn btn-secondary">Decline</button>
+                <button id="ttol-accept-btn" class="btn btn-primary">Accept</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TTOL Write Phase Screen -->
+    <div id="ttol-write-modal" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content ttol-write-content">
+            <p class="rps-game-vs" id="ttol-write-vs">vs Table X</p>
+            <p class="rps-game-mode" id="ttol-write-mode"></p>
+            <p class="ttol-write-instruction">🤫 Write 2 truths and 1 lie — then tap the lie!</p>
+            <div class="ttol-timer-bar-track">
+                <div id="ttol-write-timer-bar" class="ttol-timer-bar"></div>
+            </div>
+            <div class="ttol-statements-form">
+                <div class="ttol-statement-row" id="ttol-row-0">
+                    <span class="ttol-stmt-number">1</span>
+                    <input type="text" class="ttol-statement-input" id="ttol-stmt-0" placeholder="e.g. I've visited 10 countries" maxlength="200" autocomplete="off">
+                    <button class="ttol-lie-toggle" data-idx="0">✓ TRUTH</button>
+                </div>
+                <div class="ttol-statement-row" id="ttol-row-1">
+                    <span class="ttol-stmt-number">2</span>
+                    <input type="text" class="ttol-statement-input" id="ttol-stmt-1" placeholder="e.g. I can play guitar" maxlength="200" autocomplete="off">
+                    <button class="ttol-lie-toggle" data-idx="1">✓ TRUTH</button>
+                </div>
+                <div class="ttol-statement-row" id="ttol-row-2">
+                    <span class="ttol-stmt-number">3</span>
+                    <input type="text" class="ttol-statement-input" id="ttol-stmt-2" placeholder="e.g. I once met a celebrity" maxlength="200" autocomplete="off">
+                    <button class="ttol-lie-toggle" data-idx="2">✓ TRUTH</button>
+                </div>
+            </div>
+            <button id="ttol-submit-btn" class="ttol-submit-btn" disabled>Fill all 3 & mark the lie</button>
+            <div id="ttol-write-waiting" class="rps-waiting hidden">
+                <div class="rps-waiting-icon">⏳</div>
+                <p>Waiting for opponent to write...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- TTOL Guess Phase Screen -->
+    <div id="ttol-guess-modal" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content ttol-guess-content">
+            <p class="rps-game-vs" id="ttol-guess-vs">Table X's Statements</p>
+            <p class="ttol-guess-instruction">🔍 Which one is the <strong>LIE</strong>? Tap to choose!</p>
+            <div class="ttol-timer-bar-track">
+                <div id="ttol-guess-timer-bar" class="ttol-timer-bar"></div>
+            </div>
+            <div class="ttol-guess-cards" id="ttol-guess-cards">
+                <!-- Populated by JS -->
+            </div>
+            <button id="ttol-guess-btn" class="ttol-guess-submit-btn" disabled>🔒 Lock In My Guess</button>
+            <div id="ttol-guess-waiting" class="rps-waiting hidden">
+                <div class="rps-waiting-icon">⏳</div>
+                <p>Waiting for opponent to guess...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- TTOL Result Screen -->
+    <div id="ttol-result-modal" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content ttol-result-content">
+            <button id="ttol-result-close" class="modal-close-x">&times;</button>
+            <div id="ttol-result-icon" class="rps-result-icon">🎉</div>
+            <h3 id="ttol-result-title" class="rps-result-title">You won!</h3>
+            <div id="ttol-result-reveal" class="ttol-result-reveal">
+                <!-- JS renders reveal -->
+            </div>
+            <p id="ttol-result-drink" class="rps-result-drink hidden"></p>
+        </div>
+    </div>
+
+    <!-- Bottom navigation -->
+    <nav class="bottom-nav">
+        <a href="/menu" class="nav-item">
+            <span class="nav-icon">📋</span>
+            <span>Menu</span>
+        </a>
+        <a href="/tables" class="nav-item active">
+            <span class="nav-icon">🪑</span>
+            <span>Tables</span>
+        </a>
+    </nav>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Check if user has a table
+    const myTable = parseInt(localStorage.getItem('shamrockTable'));
+    const sessionId = localStorage.getItem('shamrockSession');
+
+    if (!myTable || !sessionId) {
+        window.location.href = '/';
+    }
+
+    document.getElementById('my-table-number').textContent = myTable;
+
+    let targetTable = null;
+    let targetSession = null;
+    let selectedDrink = null;
+
+    // Profile cache: table_number -> [{name, photo_url, session_id, color_frame}]
+    const profileMembers = {};
+
+    function tableName(tableNum) {
+        const members = profileMembers[tableNum];
+        if (!members || members.length === 0) return `Table ${tableNum}`;
+        if (members.length === 1) return members[0].name;
+        return `${members[0].name} +${members.length - 1}`;
+    }
+
+    function playerName(tableNum) {
+        const members = profileMembers[tableNum];
+        return (members && members.length > 0) ? members[0].name : `Table ${tableNum}`;
+    }
+
+    function personName(sessId) {
+        for (const members of Object.values(profileMembers)) {
+            const m = members.find(x => x.session_id === sessId);
+            if (m) return m.name;
+        }
+        return 'Someone';
+    }
+
+    // ===== Browser Notifications =====
+    // iOS PWA requires user gesture + service worker showNotification
+    if ('Notification' in window && Notification.permission === 'default') {
+        document.getElementById('notif-banner').classList.remove('hidden');
+        document.getElementById('notif-enable-btn').addEventListener('click', () => {
+            Notification.requestPermission().then((perm) => {
+                console.log('Notification permission:', perm);
+                document.getElementById('notif-banner').classList.add('hidden');
+                if (perm === 'granted') {
+                    // Show a test notification via service worker
+                    navigator.serviceWorker.ready.then(reg => {
+                        reg.showNotification('Shamrock', { body: 'Notifications enabled! 🎉', icon: '/static/icon-192.png' });
+                    });
+                }
+            });
+        });
+        document.getElementById('notif-dismiss-btn').addEventListener('click', () => {
+            document.getElementById('notif-banner').classList.add('hidden');
+        });
+    }
+
+    function sendBrowserNotification(title, body) {
+        if ('Notification' in window && Notification.permission === 'granted' && document.hidden) {
+            // Use service worker showNotification (works on iOS PWA)
+            if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+                navigator.serviceWorker.ready.then(reg => {
+                    reg.showNotification(title, { body, icon: '/static/icon-192.png' });
+                });
+            } else {
+                // Fallback for desktop browsers
+                const n = new Notification(title, { body, icon: '/static/icon-192.png' });
+                n.onclick = () => { window.focus(); n.close(); };
+                setTimeout(() => n.close(), 8000);
+            }
+        }
+    }
+
+    // ===== Notification Queue =====
+    const incomingQueue = [];
+    let processingIncoming = false;
+
+    // ===== Drink Menu Data (loaded from API) =====
+    let menuDrinks = [];
+    fetch('/api/drinks')
+        .then(res => res.json())
+        .then(drinks => { menuDrinks = drinks; });
+
+    // Connect to socket
+    const socket = io();
+
+    socket.on('connect', () => {
+        console.log('Connected to server');
+        document.getElementById('connection-status').classList.add('hidden');
+
+        // Rejoin our table
+        socket.emit('rejoin_table', {
+            table_number: myTable,
+            session_id: sessionId
+        });
+    });
+
+    socket.on('disconnect', () => {
+        document.getElementById('connection-status').classList.remove('hidden');
+    });
+
+    socket.on('rejoin_failed', () => {
+        // Table session expired — clear state and go back to landing
+        localStorage.removeItem('shamrockTable');
+        localStorage.removeItem('shamrockSession');
+        localStorage.removeItem('shamrockProfileName');
+        localStorage.removeItem('shamrockProfilePhoto');
+        window.location.href = '/';
+    });
+
+    socket.on('table_update', (tables) => {
+        renderTables(tables);
+        renderFloorPlan(tables);
+    });
+
+    socket.on('send_success', (data) => {
+        showToast('Drink sent! 🍻', 'success');
+    });
+
+    socket.on('send_error', (data) => {
+        showToast(data.message, 'error');
+    });
+
+    socket.on('incoming_message', (data) => {
+        // Only show if targeted at us (or no specific target)
+        if (data.to_session && data.to_session !== sessionId) return;
+        incomingQueue.push(data);
+        if (!processingIncoming) {
+            showNextIncoming();
+        }
+    });
+
+    socket.on('message_response', (data) => {
+        const table = data.responder_table ? tableName(data.responder_table) : 'They';
+        const drink = data.content || 'your drink';
+        if (data.type === 'accepted') {
+            showToast(`${table} accepted your ${drink}! 🥂`, 'success');
+            sendBrowserNotification('Drink Accepted! 🥂', `${table} accepted your ${drink}`);
+        } else {
+            showToast(`${table} declined your ${drink}`, 'info');
+            sendBrowserNotification('Drink Declined', `${table} declined your ${drink}`);
+        }
+    });
+
+    socket.on('response_confirmed', (data) => {
+        if (data.type === 'accepted') {
+            showToast(`You accepted the ${data.content || 'drink'}! 🥂`, 'success');
+        }
+    });
+
+    // Admin broadcast messages
+    socket.on('admin_broadcast', (data) => {
+        showToast(data.message, 'info');
+    });
+
+    // Fetch initial table data
+    let previousTableState = null; // null = first render (skip animations)
+    let currentView = localStorage.getItem('shamrockViewMode') || 'floorplan';
+    let latestTables = null; // cache for view switching
+
+    // Floor plan configuration: table positions as percentages
+    const floorPlanFloors = {
+        1: {
+            container: 'floor-plan-1',
+            tables: {
+                5: { top: '10%', left: '4%', width: '16%', height: '52%', label: 'Bar' },
+                1: { top: '6%', left: '70%', width: '22%', height: '20%' },
+                2: { top: '50%', left: '70%', width: '22%', height: '20%' },
+                3: { top: '72%', left: '58%', width: '36%', height: '22%' },
+                4: { top: '72%', left: '4%', width: '30%', height: '22%' },
+            }
+        },
+        2: {
+            container: 'floor-plan-2',
+            tables: {
+                6:  { top: '18%', left: '5%',  width: '16%', height: '16%' },
+                7:  { top: '44%', left: '5%',  width: '16%', height: '16%' },
+                8:  { top: '70%', left: '5%',  width: '16%', height: '16%' },
+                9:  { top: '36%', left: '30%', width: '16%', height: '16%' },
+                10: { top: '58%', left: '30%', width: '16%', height: '16%' },
+                11: { top: '18%', left: '68%', width: '26%', height: '22%' },
+                12: { top: '62%', left: '68%', width: '26%', height: '22%' },
+            }
+        }
+    };
+    let currentFloor = 1;
+
+    // Initialize view state
+    function initView() {
+        const grid = document.getElementById('table-grid');
+        const fpWrapper = document.getElementById('floor-plan-wrapper');
+        const iconMap = document.getElementById('view-icon-map');
+        const iconGrid = document.getElementById('view-icon-grid');
+        if (currentView === 'floorplan') {
+            grid.classList.add('hidden');
+            fpWrapper.classList.remove('hidden');
+            iconMap.classList.add('hidden');
+            iconGrid.classList.remove('hidden');
+        } else {
+            grid.classList.remove('hidden');
+            fpWrapper.classList.add('hidden');
+            iconMap.classList.remove('hidden');
+            iconGrid.classList.add('hidden');
+        }
+    }
+    initView();
+
+    // Floor tab switching
+    document.querySelectorAll('.floor-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            const floor = parseInt(tab.dataset.floor);
+            currentFloor = floor;
+            document.querySelectorAll('.floor-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            document.getElementById('floor-plan-1').classList.toggle('hidden', floor !== 1);
+            document.getElementById('floor-plan-2').classList.toggle('hidden', floor !== 2);
+            if (latestTables) renderFloorPlan(latestTables);
+        });
+    });
+
+    document.getElementById('view-toggle').addEventListener('click', () => {
+        currentView = currentView === 'grid' ? 'floorplan' : 'grid';
+        localStorage.setItem('shamrockViewMode', currentView);
+        initView();
+        if (latestTables) {
+            if (currentView === 'floorplan') renderFloorPlan(latestTables);
+            else renderTables(latestTables);
+        }
+    });
+
+    fetch('/api/tables')
+        .then(res => res.json())
+        .then(tables => {
+            renderTables(tables);
+            renderFloorPlan(tables);
+        });
+
+    function renderTables(tables) {
+        latestTables = tables;
+        const grid = document.getElementById('table-grid');
+        const emptyState = document.getElementById('empty-state');
+        const isFirstRender = previousTableState === null;
+
+        // Update profile cache
+        tables.forEach(t => {
+            if (t.members && t.members.length > 0) {
+                profileMembers[t.table_number] = t.members;
+            } else {
+                delete profileMembers[t.table_number];
+            }
+        });
+
+        const otherOccupied = tables.filter(t => t.is_occupied && t.table_number !== myTable);
+
+        if (otherOccupied.length === 0) {
+            emptyState.classList.remove('hidden');
+        } else {
+            emptyState.classList.add('hidden');
+        }
+
+        const myName = localStorage.getItem('shamrockProfileName') || 'You';
+
+        grid.innerHTML = tables.map(t => {
+            let className = 'table-cell';
+            let label = '';
+            let avatarHtml = '';
+            const wasOccupied = !isFirstRender && previousTableState[t.table_number];
+            const isNewlyOccupied = !isFirstRender && t.is_occupied && !wasOccupied && t.table_number !== myTable;
+
+            if (t.table_number === myTable) {
+                className += ' my-table';
+                const myPhoto = localStorage.getItem('shamrockProfilePhoto');
+                const myColor = localStorage.getItem('shamrockColorFrame');
+                const myFrameClass = myColor ? ` frame-${myColor}` : '';
+                if (myPhoto) avatarHtml = `<img class="table-avatar${myFrameClass}" src="${myPhoto}" alt="">`;
+                label = `<span class="table-label"><span class="status-dot"></span>${myName}</span>`;
+            } else if (t.is_occupied) {
+                className += ' occupied';
+                if (isNewlyOccupied) className += ' just-joined';
+                // Show stacked avatars for multiple members
+                const members = t.members || [];
+                const show = members.slice(0, 3);
+                if (show.length > 0) {
+                    avatarHtml = '<div class="avatar-stack">';
+                    show.forEach((m, i) => {
+                        const fc = m.color_frame ? ` frame-${m.color_frame}` : '';
+                        if (m.photo_url) {
+                            avatarHtml += `<img class="table-avatar stacked${fc}" style="z-index:${3-i}" src="${m.photo_url}" alt="">`;
+                        } else {
+                            avatarHtml += `<div class="table-avatar stacked table-avatar-placeholder${fc}" style="z-index:${3-i}">${m.name[0]}</div>`;
+                        }
+                    });
+                    avatarHtml += '</div>';
+                }
+                const displayName = tableName(t.table_number);
+                label = `<span class="table-label"><span class="status-dot"></span>${displayName}</span>`;
+            } else {
+                className += ' empty';
+                label = '<span class="table-label">Empty</span>';
+            }
+
+            return `
+                <div class="${className}" data-table="${t.table_number}">
+                    ${avatarHtml}
+                    <span class="table-number">${t.table_number}</span>
+                    ${label}
+                </div>
+            `;
+        }).join('');
+
+        // Save current state for next diff
+        previousTableState = {};
+        tables.forEach(t => { previousTableState[t.table_number] = t.is_occupied; });
+
+        // Remove just-joined class after animation completes
+        setTimeout(() => {
+            grid.querySelectorAll('.just-joined').forEach(el => el.classList.remove('just-joined'));
+        }, 800);
+
+        // Add click handlers to occupied tables
+        grid.querySelectorAll('.table-cell.occupied').forEach(cell => {
+            cell.addEventListener('click', () => {
+                targetTable = parseInt(cell.dataset.table);
+                openActionModal();
+            });
+        });
+    }
+
+    // ===== Floor Plan Rendering =====
+    function renderFloorPlan(tables) {
+        const myName = localStorage.getItem('shamrockProfileName') || 'You';
+
+        // Render tables into each floor container
+        Object.keys(floorPlanFloors).forEach(floorKey => {
+            const floorCfg = floorPlanFloors[floorKey];
+            const fp = document.getElementById(floorCfg.container);
+            if (!fp) return;
+            // Remove old table elements (keep decorative .fp-element divs)
+            fp.querySelectorAll('.fp-table').forEach(el => el.remove());
+
+            tables.forEach(t => {
+                const config = floorCfg.tables[t.table_number];
+                if (!config) return; // table not on this floor
+
+                let className = 'fp-table';
+                let avatarHtml = '';
+
+                if (t.table_number === myTable) {
+                    className += ' my-table';
+                    const myPhoto = localStorage.getItem('shamrockProfilePhoto');
+                    const myColor = localStorage.getItem('shamrockColorFrame');
+                    const myFrameClass = myColor ? ` frame-${myColor}` : '';
+                    if (myPhoto) avatarHtml = `<img class="fp-avatar${myFrameClass}" src="${myPhoto}" alt="">`;
+                } else if (t.is_occupied) {
+                    className += ' occupied';
+                    const members = t.members || [];
+                    const show = members.slice(0, 2);
+                    if (show.length > 0) {
+                        avatarHtml = '<div class="fp-avatar-stack">';
+                        show.forEach((m, i) => {
+                            const fc = m.color_frame ? ` frame-${m.color_frame}` : '';
+                            if (m.photo_url) {
+                                avatarHtml += `<img class="fp-avatar stacked${fc}" style="z-index:${3-i}" src="${m.photo_url}" alt="">`;
+                            } else {
+                                avatarHtml += `<div class="fp-avatar stacked fp-avatar-placeholder${fc}" style="z-index:${3-i}">${m.name[0]}</div>`;
+                            }
+                        });
+                        avatarHtml += '</div>';
+                    }
+                } else {
+                    className += ' empty';
+                }
+
+                const div = document.createElement('div');
+                div.className = className;
+                div.dataset.table = t.table_number;
+                div.style.top = config.top;
+                div.style.left = config.left;
+                div.style.width = config.width;
+                div.style.height = config.height;
+                div.innerHTML = `
+                    ${avatarHtml}
+                    <span class="fp-table-number">${config.label || t.table_number}</span>
+                `;
+
+                if (t.is_occupied && t.table_number !== myTable) {
+                    div.addEventListener('click', () => {
+                        targetTable = t.table_number;
+                        openActionModal();
+                    });
+                }
+
+                fp.appendChild(div);
+            });
+        });
+    }
+
+    // ===== Pre-selected drink from menu page =====
+    let pendingSendDrink = null;
+    try {
+        const saved = localStorage.getItem('shamrockSendDrink');
+        if (saved) {
+            pendingSendDrink = JSON.parse(saved);
+            localStorage.removeItem('shamrockSendDrink');
+        }
+    } catch (e) {}
+
+    // ===== Action Modal =====
+    function openActionModal() {
+        selectedDrink = null;
+        targetSession = null;
+        document.getElementById('target-table').textContent = tableName(targetTable);
+        document.getElementById('drink-note').value = '';
+
+        // Person picker: if table has 2+ members, show picker first
+        const members = profileMembers[targetTable] || [];
+        const pickerStep = document.getElementById('person-picker-step');
+        const actionStep = document.getElementById('action-step');
+
+        if (members.length > 1) {
+            // Show person picker
+            const list = document.getElementById('person-picker-list');
+            list.innerHTML = members.map(m => {
+                const fc = m.color_frame ? ` frame-${m.color_frame}` : '';
+                const photoHtml = m.photo_url
+                    ? `<img class="person-picker-photo${fc}" src="${m.photo_url}" alt="">`
+                    : `<div class="person-picker-photo person-picker-initial${fc}">${m.name[0]}</div>`;
+                return `<button class="person-picker-card" data-session="${m.session_id}">
+                    ${photoHtml}
+                    <span class="person-picker-name">${m.name}</span>
+                </button>`;
+            }).join('');
+            list.querySelectorAll('.person-picker-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    targetSession = card.dataset.session;
+                    const selected = members.find(m => m.session_id === targetSession);
+                    document.getElementById('target-table').textContent = selected ? selected.name : tableName(targetTable);
+                    pickerStep.classList.add('hidden');
+                    actionStep.classList.remove('hidden');
+                });
+            });
+            pickerStep.classList.remove('hidden');
+            actionStep.classList.add('hidden');
+        } else {
+            // Single person or empty — skip picker
+            if (members.length === 1) targetSession = members[0].session_id;
+            pickerStep.classList.add('hidden');
+            actionStep.classList.remove('hidden');
+        }
+
+        if (pendingSendDrink) {
+            // Skip to drink menu with the drink pre-selected
+            document.getElementById('action-step').classList.add('hidden');
+            document.getElementById('drink-menu-step').classList.remove('hidden');
+            renderDrinkMenu('all');
+
+            // Find and auto-select the matching drink
+            const match = menuDrinks.find(d => d.name === pendingSendDrink.name);
+            if (match) {
+                selectedDrink = match;
+                document.getElementById('drink-send-section').classList.remove('hidden');
+                document.getElementById('drink-send-btn').textContent = `Send ${match.name} (${match.price})`;
+                // Highlight matching item in grid
+                setTimeout(() => {
+                    const grid = document.getElementById('drink-menu-grid');
+                    grid.querySelectorAll('.drink-menu-item').forEach(el => {
+                        const idx = parseInt(el.dataset.idx);
+                        if (menuDrinks[idx] && menuDrinks[idx].name === match.name) {
+                            el.classList.add('selected');
+                        }
+                    });
+                }, 50);
+            } else {
+                document.getElementById('drink-send-section').classList.add('hidden');
+            }
+            pendingSendDrink = null;
+        } else {
+            document.getElementById('action-step').classList.remove('hidden');
+            document.getElementById('drink-menu-step').classList.add('hidden');
+            document.getElementById('drink-send-section').classList.add('hidden');
+        }
+
+        document.getElementById('action-modal').classList.remove('hidden');
+    }
+
+    function closeActionModal() {
+        document.getElementById('action-modal').classList.add('hidden');
+    }
+
+    // Modal close handlers
+    document.querySelector('.modal-close').addEventListener('click', closeActionModal);
+    document.querySelector('#action-modal .modal-backdrop').addEventListener('click', closeActionModal);
+
+    // Buy a Drink button -> show drink menu
+    document.getElementById('buy-drink-btn').addEventListener('click', () => {
+        document.getElementById('action-step').classList.add('hidden');
+        document.getElementById('drink-menu-step').classList.remove('hidden');
+        renderDrinkMenu('all');
+    });
+
+    // Category tabs
+    document.querySelectorAll('.drink-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.drink-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            renderDrinkMenu(tab.dataset.cat);
+        });
+    });
+
+    function renderDrinkMenu(category) {
+        const grid = document.getElementById('drink-menu-grid');
+        const drinks = category === 'all' ? menuDrinks : menuDrinks.filter(d => d.category === category);
+
+        grid.innerHTML = drinks.map((d, i) => {
+            const idx = menuDrinks.indexOf(d);
+            const isSelected = selectedDrink && selectedDrink.name === d.name;
+            const tiers = d.price_4 ? `<div class="drink-menu-item-tiers">4x ${d.price_4}${d.price_10 ? ' · 10x ' + d.price_10 : ''}</div>` : '';
+            return `
+                <div class="drink-menu-item${isSelected ? ' selected' : ''}" data-idx="${idx}">
+                    <div class="drink-menu-item-img">
+                        <img src="${d.img}" alt="${d.name}" loading="lazy">
+                    </div>
+                    <div class="drink-menu-item-name">${d.name}</div>
+                    <div class="drink-menu-item-price">${d.price}</div>
+                    ${tiers}
+                </div>
+            `;
+        }).join('');
+
+        // Click handlers
+        grid.querySelectorAll('.drink-menu-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const idx = parseInt(item.dataset.idx);
+                selectedDrink = menuDrinks[idx];
+
+                // Highlight selected
+                grid.querySelectorAll('.drink-menu-item').forEach(el => el.classList.remove('selected'));
+                item.classList.add('selected');
+
+                // Show send section
+                document.getElementById('drink-send-section').classList.remove('hidden');
+                document.getElementById('drink-send-btn').textContent = `Send ${selectedDrink.name} (${selectedDrink.price})`;
+            });
+        });
+    }
+
+    // Note suggestion chips
+    document.querySelectorAll('.note-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+            const noteInput = document.getElementById('drink-note');
+            // Toggle: if already selected, deselect
+            if (chip.classList.contains('active')) {
+                chip.classList.remove('active');
+                noteInput.value = '';
+            } else {
+                document.querySelectorAll('.note-chip').forEach(c => c.classList.remove('active'));
+                chip.classList.add('active');
+                noteInput.value = chip.dataset.note;
+            }
+        });
+    });
+
+    // Clear chip selection when user types custom note
+    document.getElementById('drink-note').addEventListener('input', () => {
+        document.querySelectorAll('.note-chip').forEach(c => c.classList.remove('active'));
+    });
+
+    // Send drink button
+    document.getElementById('drink-send-btn').addEventListener('click', () => {
+        if (!selectedDrink) return;
+        const note = document.getElementById('drink-note').value.trim();
+        const drinkLabel = `${selectedDrink.name} (${selectedDrink.price})`;
+
+        showConfirm(`Send ${drinkLabel} to ${tableName(targetTable)}?`, () => {
+            socket.emit('send_message', {
+                from_table: myTable,
+                to_table: targetTable,
+                message_type: 'drink',
+                content: selectedDrink.name,
+                note: note || '',
+                to_session: targetSession,
+            });
+            closeActionModal();
+        });
+    });
+
+    // ===== Incoming Notification Queue =====
+    function showNextIncoming() {
+        if (incomingQueue.length === 0) {
+            processingIncoming = false;
+            return;
+        }
+        processingIncoming = true;
+        const data = incomingQueue[0];
+
+        const incomingPhoto = document.getElementById('incoming-photo');
+        incomingPhoto.className = 'incoming-photo hidden';
+        if (data.from_photo) {
+            incomingPhoto.src = data.from_photo;
+            incomingPhoto.classList.remove('hidden');
+            const senderMembers = profileMembers[data.from_table] || [];
+            const senderMember = senderMembers.find(m => m.name === data.from_name) || senderMembers[0];
+            const fc = senderMember ? senderMember.color_frame : null;
+            if (fc) incomingPhoto.classList.add(`frame-${fc}`);
+        }
+        document.getElementById('incoming-icon').textContent = '🍺';
+        const senderName = data.from_name || tableName(data.from_table);
+        document.getElementById('incoming-message').textContent =
+            `${senderName} wants to buy you a ${data.content}!`;
+
+        const noteEl = document.getElementById('incoming-note');
+        if (data.note) {
+            noteEl.textContent = `"${data.note}"`;
+            noteEl.classList.remove('hidden');
+        } else {
+            noteEl.classList.add('hidden');
+        }
+
+        const queueCountEl = document.getElementById('incoming-queue-count');
+        if (incomingQueue.length > 1) {
+            queueCountEl.textContent = `+${incomingQueue.length - 1} more incoming`;
+            queueCountEl.classList.remove('hidden');
+        } else {
+            queueCountEl.classList.add('hidden');
+        }
+
+        document.getElementById('incoming-modal').classList.remove('hidden');
+
+        if (navigator.vibrate) {
+            navigator.vibrate([200, 100, 200]);
+        }
+
+        // Browser notification when tab is hidden
+        const noteText = data.note ? ` "${data.note}"` : '';
+        sendBrowserNotification(
+            `${senderName} sent you a drink!`,
+            `${data.content}${noteText}`
+        );
+    }
+
+    function handleIncomingResponse(response) {
+        const current = incomingQueue.shift();
+        if (current) {
+            socket.emit('respond_message', {
+                message_id: current.message_id,
+                response: response,
+                from_table: current.from_table
+            });
+        }
+        document.getElementById('incoming-modal').classList.add('hidden');
+        if (incomingQueue.length > 0) {
+            setTimeout(showNextIncoming, 400);
+        } else {
+            processingIncoming = false;
+        }
+    }
+
+    // Accept/Decline buttons
+    document.getElementById('accept-btn').addEventListener('click', () => {
+        handleIncomingResponse('accepted');
+    });
+
+    document.getElementById('decline-btn').addEventListener('click', () => {
+        handleIncomingResponse('declined');
+    });
+
+    // Checkout button
+    document.getElementById('checkout-btn').addEventListener('click', () => {
+        showConfirm('Leave Table ' + myTable + '?', () => {
+            socket.emit('leave_table', {
+                table_number: myTable,
+                session_id: sessionId
+            });
+            localStorage.removeItem('shamrockTable');
+            localStorage.removeItem('shamrockSession');
+            localStorage.removeItem('shamrockProfileName');
+            localStorage.removeItem('shamrockProfilePhoto');
+            window.location.href = '/';
+        }, 'Check Out', 'Stay');
+    });
+
+    // Confirmation dialog
+    function showConfirm(message, onConfirm, confirmText = 'Send ✓', cancelText = 'Cancel') {
+        document.getElementById('confirm-message').textContent = message;
+        document.getElementById('confirm-ok').textContent = confirmText;
+        document.getElementById('confirm-cancel').textContent = cancelText;
+        document.getElementById('confirm-modal').classList.remove('hidden');
+
+        const confirmHandler = () => {
+            document.getElementById('confirm-modal').classList.add('hidden');
+            onConfirm();
+            cleanup();
+        };
+
+        const cancelHandler = () => {
+            document.getElementById('confirm-modal').classList.add('hidden');
+            cleanup();
+        };
+
+        const cleanup = () => {
+            document.getElementById('confirm-ok').removeEventListener('click', confirmHandler);
+            document.getElementById('confirm-cancel').removeEventListener('click', cancelHandler);
+        };
+
+        document.getElementById('confirm-ok').addEventListener('click', confirmHandler);
+        document.getElementById('confirm-cancel').addEventListener('click', cancelHandler);
+    }
+
+    // Toast notifications
+    function showToast(message, type = 'info') {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        toast.textContent = message;
+        container.appendChild(toast);
+
+        setTimeout(() => {
+            toast.classList.add('fade-out');
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    // ===== Rock Paper Scissors =====
+    let rpsGameId = null;
+    let rpsMode = null;
+    let rpsDrink = null;
+    let rpsOpponentTable = null;
+    const choiceEmoji = { rock: '✊', paper: '✋', scissors: '✌️' };
+
+    // RPS button -> show setup
+    document.getElementById('rps-btn').addEventListener('click', () => {
+        document.getElementById('action-step').classList.add('hidden');
+        document.getElementById('drink-menu-step').classList.add('hidden');
+        document.getElementById('bomb-setup-step').classList.add('hidden');
+        document.getElementById('tap-setup-step').classList.add('hidden');
+        document.getElementById('ttol-setup-step').classList.add('hidden');
+        document.getElementById('rps-setup-step').classList.remove('hidden');
+        document.querySelectorAll('.rps-mode-btn').forEach(b => b.classList.remove('active'));
+    });
+
+    // Mode selection — sends challenge immediately
+    document.querySelectorAll('.rps-mode-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            rpsMode = btn.dataset.mode;
+            socket.emit('rps_challenge', {
+                from_table: myTable,
+                to_table: targetTable,
+                mode: rpsMode,
+                drink: rpsMode === 'drink' ? 'drink' : '',
+                to_session: targetSession,
+            });
+            closeActionModal();
+            showToast('Challenge sent!', 'info');
+        });
+    });
+
+    // Reset RPS/Bomb/Tap setup when action modal closes
+    const origCloseActionModal = closeActionModal;
+    closeActionModal = function() {
+        document.getElementById('rps-setup-step').classList.add('hidden');
+        document.getElementById('bomb-setup-step').classList.add('hidden');
+        document.getElementById('tap-setup-step').classList.add('hidden');
+        document.getElementById('ttol-setup-step').classList.add('hidden');
+        document.getElementById('person-picker-step').classList.add('hidden');
+        origCloseActionModal();
+    };
+
+    // --- RPS Socket Events ---
+
+    socket.on('rps_error', (data) => {
+        showToast(data.message, 'error');
+    });
+
+    socket.on('rps_declined', (data) => {
+        showToast(`${tableName(data.from_table)} declined your challenge`, 'info');
+    });
+
+    // Incoming challenge
+    socket.on('rps_incoming', (data) => {
+        if (data.to_session && data.to_session !== sessionId) return;
+        rpsGameId = data.game_id;
+        const modeText = data.mode === 'drink' ? `Loser buys the winner a drink!` : 'Just for fun!';
+        const rpsPhoto = document.getElementById('rps-incoming-photo');
+        rpsPhoto.className = 'incoming-photo hidden';
+        if (data.from_photo) {
+            rpsPhoto.src = data.from_photo;
+            rpsPhoto.classList.remove('hidden');
+            const senderMembers = profileMembers[data.from_table] || [];
+            const senderMember = senderMembers.find(m => m.name === data.from_name) || senderMembers[0];
+            const fc = senderMember ? senderMember.color_frame : null;
+            if (fc) rpsPhoto.classList.add(`frame-${fc}`);
+        }
+        const rpsChallenger = data.from_name || tableName(data.from_table);
+        document.getElementById('rps-incoming-message').textContent =
+            `${rpsChallenger} challenges you to Rock Paper Scissors!`;
+        document.getElementById('rps-incoming-detail').textContent = modeText;
+        document.getElementById('rps-incoming-modal').classList.remove('hidden');
+
+        if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+        sendBrowserNotification(
+            'RPS Challenge!',
+            `${rpsChallenger} wants to play! ${modeText}`
+        );
+    });
+
+    // Accept/Decline challenge
+    document.getElementById('rps-accept-btn').addEventListener('click', () => {
+        document.getElementById('rps-incoming-modal').classList.add('hidden');
+        socket.emit('rps_response', { game_id: rpsGameId, accepted: true });
+    });
+
+    document.getElementById('rps-decline-btn').addEventListener('click', () => {
+        document.getElementById('rps-incoming-modal').classList.add('hidden');
+        socket.emit('rps_response', { game_id: rpsGameId, accepted: false });
+        rpsGameId = null;
+    });
+
+    // Game start
+    socket.on('rps_start', (data) => {
+        if (data.session_a && data.session_a !== sessionId && data.session_b !== sessionId) return;
+        rpsGameId = data.game_id;
+        rpsOpponentTable = data.table_a === myTable ? data.table_b : data.table_a;
+
+        document.getElementById('rps-game-vs').textContent = `vs ${tableName(rpsOpponentTable)}`;
+        const modeText = data.mode === 'drink' ? `Playing for: ${data.drink}` : 'Just for fun';
+        document.getElementById('rps-game-mode').textContent = modeText;
+
+        // Reset UI
+        document.getElementById('rps-choice-section').classList.remove('hidden');
+        document.getElementById('rps-waiting').classList.add('hidden');
+        document.querySelectorAll('.rps-choice-btn').forEach(b => {
+            b.classList.remove('selected', 'disabled');
+            b.disabled = false;
+        });
+
+        document.getElementById('rps-game-modal').classList.remove('hidden');
+    });
+
+    // Choice buttons
+    document.querySelectorAll('.rps-choice-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (!rpsGameId) return;
+            const choice = btn.dataset.choice;
+
+            // Disable all buttons, highlight selected
+            document.querySelectorAll('.rps-choice-btn').forEach(b => {
+                b.disabled = true;
+                b.classList.add('disabled');
+            });
+            btn.classList.remove('disabled');
+            btn.classList.add('selected');
+
+            // Show waiting state
+            document.getElementById('rps-waiting').classList.remove('hidden');
+
+            socket.emit('rps_choice', {
+                game_id: rpsGameId,
+                choice: choice,
+                table: myTable,
+            });
+        });
+    });
+
+    // Game result
+    socket.on('rps_result', (data) => {
+        if (data.session_a && data.session_a !== sessionId && data.session_b !== sessionId) return;
+        // Close game screen
+        document.getElementById('rps-game-modal').classList.add('hidden');
+
+        if (data.result === 'cancelled') {
+            showToast(data.message || 'Game cancelled', 'info');
+            rpsGameId = null;
+            return;
+        }
+
+        const myChoice = data.table_a === myTable ? data.choice_a : data.choice_b;
+        const theirChoice = data.table_a === myTable ? data.choice_b : data.choice_a;
+        const opponentTable = data.table_a === myTable ? data.table_b : data.table_a;
+
+        // Set result icon and title
+        const resultModal = document.getElementById('rps-result-modal');
+        const resultIcon = document.getElementById('rps-result-icon');
+        const resultTitle = document.getElementById('rps-result-title');
+        const resultDrink = document.getElementById('rps-result-drink');
+
+        if (data.result === 'tie') {
+            resultIcon.textContent = '🤝';
+            resultTitle.textContent = "It's a tie!";
+            resultTitle.className = 'rps-result-title rps-result-tie';
+        } else if (data.result === 'win') {
+            resultIcon.textContent = '🎉';
+            resultTitle.textContent = 'You won!';
+            resultTitle.className = 'rps-result-title rps-result-win';
+        } else {
+            resultIcon.textContent = '😔';
+            resultTitle.textContent = 'You lost!';
+            resultTitle.className = 'rps-result-title rps-result-lose';
+        }
+
+        // Show choices
+        document.getElementById('rps-result-yours').textContent = myChoice ? choiceEmoji[myChoice] : '⏰';
+        document.getElementById('rps-result-theirs').textContent = theirChoice ? choiceEmoji[theirChoice] : '⏰';
+        document.getElementById('rps-result-them-label').textContent = tableName(opponentTable);
+
+        // Drink wager result
+        if (data.mode === 'drink' && data.drink && data.result !== 'tie') {
+            resultDrink.classList.remove('hidden');
+            resultDrink.classList.remove('drink-winner', 'drink-loser');
+            if (data.result === 'win') {
+                resultDrink.classList.add('drink-winner');
+                resultDrink.textContent = `Go to the bar to collect your drink from ${playerName(data.loser)}!`;
+            } else {
+                resultDrink.classList.add('drink-loser');
+                resultDrink.textContent = `Go to the bar now and buy ${playerName(data.winner)} a drink!`;
+            }
+        } else {
+            resultDrink.classList.add('hidden');
+        }
+
+        // Store opponent for rematch
+        rpsOpponentTable = opponentTable;
+
+        resultModal.classList.remove('hidden');
+        rpsGameId = null;
+    });
+
+    // Result modal buttons
+    document.getElementById('rps-result-close').addEventListener('click', () => {
+        document.getElementById('rps-result-modal').classList.add('hidden');
+    });
+
+    // ===== Bomb Pass =====
+    let bombGameId = null;
+    let bombMode = null;
+    let bombDrink = null;
+    let bombOpponentTable = null;
+    let bombFuseTimer = null;
+
+    // Bomb button -> show setup
+    document.getElementById('bomb-btn').addEventListener('click', () => {
+        document.getElementById('action-step').classList.add('hidden');
+        document.getElementById('drink-menu-step').classList.add('hidden');
+        document.getElementById('rps-setup-step').classList.add('hidden');
+        document.getElementById('tap-setup-step').classList.add('hidden');
+        document.getElementById('ttol-setup-step').classList.add('hidden');
+        document.getElementById('bomb-setup-step').classList.remove('hidden');
+        document.querySelectorAll('.bomb-mode-btn').forEach(b => b.classList.remove('active'));
+    });
+
+    // Mode selection — sends challenge immediately
+    document.querySelectorAll('.bomb-mode-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            bombMode = btn.dataset.mode;
+            socket.emit('bomb_challenge', {
+                from_table: myTable,
+                to_table: targetTable,
+                mode: bombMode,
+                drink: bombMode === 'drink' ? 'drink' : '',
+                to_session: targetSession,
+            });
+            closeActionModal();
+            showToast('Bomb Pass challenge sent!', 'info');
+        });
+    });
+
+    // --- Bomb Socket Events ---
+
+    socket.on('bomb_error', (data) => {
+        showToast(data.message, 'error');
+    });
+
+    socket.on('bomb_declined', (data) => {
+        showToast(`${tableName(data.from_table)} declined your Bomb Pass`, 'info');
+    });
+
+    // Incoming bomb challenge
+    socket.on('bomb_incoming', (data) => {
+        if (data.to_session && data.to_session !== sessionId) return;
+        bombGameId = data.game_id;
+        const modeText = data.mode === 'drink' ? `Loser buys the winner a drink!` : 'Just for fun!';
+        const bombPhoto = document.getElementById('bomb-incoming-photo');
+        bombPhoto.className = 'incoming-photo hidden';
+        if (data.from_photo) {
+            bombPhoto.src = data.from_photo;
+            bombPhoto.classList.remove('hidden');
+            const senderMembers = profileMembers[data.from_table] || [];
+            const senderMember = senderMembers.find(m => m.name === data.from_name) || senderMembers[0];
+            const fc = senderMember ? senderMember.color_frame : null;
+            if (fc) bombPhoto.classList.add(`frame-${fc}`);
+        }
+        const bombChallenger = data.from_name || tableName(data.from_table);
+        document.getElementById('bomb-incoming-message').textContent =
+            `${bombChallenger} challenges you to Bomb Pass!`;
+        document.getElementById('bomb-incoming-detail').textContent = modeText;
+        document.getElementById('bomb-incoming-modal').classList.remove('hidden');
+
+        if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+        sendBrowserNotification(
+            'Bomb Pass Challenge!',
+            `${bombChallenger} wants to play! ${modeText}`
+        );
+    });
+
+    // Accept/Decline bomb
+    document.getElementById('bomb-accept-btn').addEventListener('click', () => {
+        document.getElementById('bomb-incoming-modal').classList.add('hidden');
+        socket.emit('bomb_response', { game_id: bombGameId, accepted: true });
+    });
+
+    document.getElementById('bomb-decline-btn').addEventListener('click', () => {
+        document.getElementById('bomb-incoming-modal').classList.add('hidden');
+        socket.emit('bomb_response', { game_id: bombGameId, accepted: false });
+        bombGameId = null;
+    });
+
+    let bombIsAnimating = false;
+
+    function setBombPosition(holder, animate) {
+        const isHolding = holder === myTable;
+        const emoji = document.getElementById('bomb-emoji');
+        const statusText = document.getElementById('bomb-status-text');
+        const passBtn = document.getElementById('bomb-pass-btn');
+        const waiting = document.getElementById('bomb-waiting');
+        const playerYou = document.getElementById('bomb-player-you');
+        const playerThem = document.getElementById('bomb-player-them');
+
+        if (animate && !bombIsAnimating) {
+            // Throw animation
+            bombIsAnimating = true;
+            const throwClass = isHolding ? 'bomb-throw-right-to-left' : 'bomb-throw-left-to-right';
+
+            emoji.classList.remove('bomb-shake', 'bomb-safe', 'bomb-at-you', 'bomb-at-them',
+                'bomb-throw-left-to-right', 'bomb-throw-right-to-left');
+            emoji.offsetHeight; // reflow
+            emoji.classList.add(throwClass);
+
+            setTimeout(() => {
+                emoji.classList.remove(throwClass);
+                bombIsAnimating = false;
+                applyBombState(isHolding, emoji, statusText, passBtn, waiting, playerYou, playerThem);
+            }, 400);
+        } else {
+            applyBombState(isHolding, emoji, statusText, passBtn, waiting, playerYou, playerThem);
+        }
+    }
+
+    function applyBombState(isHolding, emoji, statusText, passBtn, waiting, playerYou, playerThem) {
+        emoji.classList.remove('bomb-shake', 'bomb-safe', 'bomb-at-you', 'bomb-at-them');
+
+        if (isHolding) {
+            emoji.classList.add('bomb-shake', 'bomb-at-you');
+            statusText.textContent = "You're holding the bomb!";
+            statusText.className = 'bomb-status-text bomb-status-danger';
+            passBtn.classList.remove('hidden');
+            waiting.classList.add('hidden');
+            playerYou.classList.add('bomb-player-active');
+            playerThem.classList.remove('bomb-player-active');
+        } else {
+            emoji.classList.add('bomb-shake', 'bomb-at-them');
+            statusText.textContent = "They're holding it...";
+            statusText.className = 'bomb-status-text bomb-status-safe';
+            passBtn.classList.add('hidden');
+            waiting.classList.remove('hidden');
+            playerYou.classList.remove('bomb-player-active');
+            playerThem.classList.add('bomb-player-active');
+        }
+    }
+
+    // Bomb game start
+    socket.on('bomb_start', (data) => {
+        if (data.session_a && data.session_a !== sessionId && data.session_b !== sessionId) return;
+        bombGameId = data.game_id;
+        bombOpponentTable = data.table_a === myTable ? data.table_b : data.table_a;
+
+        document.getElementById('bomb-them-label').textContent = tableName(bombOpponentTable);
+        const modeText = data.mode === 'drink' ? `Playing for: ${data.drink}` : 'Just for fun';
+        document.getElementById('bomb-game-mode').textContent = modeText;
+
+        // Start fuse bar animation (cosmetic 15s — real timer is secret)
+        const fuseBar = document.getElementById('bomb-fuse-bar');
+        fuseBar.style.transition = 'none';
+        fuseBar.style.width = '100%';
+        fuseBar.offsetHeight; // force reflow
+        fuseBar.style.transition = 'width 15s linear';
+        fuseBar.style.width = '0%';
+
+        setBombPosition(data.holder, false);
+
+        document.getElementById('bomb-game-modal').classList.remove('hidden');
+
+        if (navigator.vibrate) navigator.vibrate(100);
+    });
+
+    // Pass button
+    document.getElementById('bomb-pass-btn').addEventListener('click', () => {
+        if (!bombGameId || bombIsAnimating) return;
+        socket.emit('bomb_pass', {
+            game_id: bombGameId,
+            table: myTable,
+        });
+        if (navigator.vibrate) navigator.vibrate(50);
+    });
+
+    // Bomb passed event
+    socket.on('bomb_passed', (data) => {
+        setBombPosition(data.holder, true);
+        if (navigator.vibrate) navigator.vibrate(50);
+    });
+
+    // Bomb result
+    socket.on('bomb_result', (data) => {
+        if (data.session_a && data.session_a !== sessionId && data.session_b !== sessionId) return;
+        document.getElementById('bomb-game-modal').classList.add('hidden');
+
+        if (data.result === 'cancelled') {
+            showToast(data.message || 'Game cancelled', 'info');
+            bombGameId = null;
+            return;
+        }
+
+        const resultIcon = document.getElementById('bomb-result-icon');
+        const resultTitle = document.getElementById('bomb-result-title');
+        const resultDrink = document.getElementById('bomb-result-drink');
+
+        if (data.result === 'win') {
+            resultIcon.textContent = '😅';
+            resultTitle.textContent = 'You survived!';
+            resultTitle.className = 'rps-result-title rps-result-win';
+        } else {
+            resultIcon.textContent = '💥';
+            resultTitle.textContent = 'BOOM! You exploded!';
+            resultTitle.className = 'rps-result-title rps-result-lose';
+            if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 200]);
+        }
+
+        // Drink wager result
+        if (data.mode === 'drink' && data.drink) {
+            resultDrink.classList.remove('hidden');
+            resultDrink.classList.remove('drink-winner', 'drink-loser');
+            if (data.result === 'win') {
+                resultDrink.classList.add('drink-winner');
+                resultDrink.textContent = `Go to the bar to collect your drink from ${playerName(data.loser)}!`;
+            } else {
+                resultDrink.classList.add('drink-loser');
+                resultDrink.textContent = `Go to the bar now and buy ${playerName(data.winner)} a drink!`;
+            }
+        } else {
+            resultDrink.classList.add('hidden');
+        }
+
+        bombOpponentTable = data.table_a === myTable ? data.table_b : data.table_a;
+
+        document.getElementById('bomb-result-modal').classList.remove('hidden');
+        bombGameId = null;
+    });
+
+    // Bomb result modal buttons
+    document.getElementById('bomb-result-close').addEventListener('click', () => {
+        document.getElementById('bomb-result-modal').classList.add('hidden');
+    });
+
+    // ===== Tap Race =====
+    let tapGameId = null;
+    let tapMode = null;
+    let tapDrink = null;
+    let tapOpponentTable = null;
+    let tapActive = false;
+    let tapMyCount = 0;
+
+    // Tap Race button -> show setup
+    document.getElementById('tap-btn').addEventListener('click', () => {
+        document.getElementById('action-step').classList.add('hidden');
+        document.getElementById('drink-menu-step').classList.add('hidden');
+        document.getElementById('rps-setup-step').classList.add('hidden');
+        document.getElementById('bomb-setup-step').classList.add('hidden');
+        document.getElementById('ttol-setup-step').classList.add('hidden');
+        document.getElementById('tap-setup-step').classList.remove('hidden');
+        document.querySelectorAll('.tap-mode-btn').forEach(b => b.classList.remove('active'));
+    });
+
+    // Mode selection — sends challenge immediately
+    document.querySelectorAll('.tap-mode-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            tapMode = btn.dataset.mode;
+            socket.emit('tap_challenge', {
+                from_table: myTable,
+                to_table: targetTable,
+                mode: tapMode,
+                drink: tapMode === 'drink' ? 'drink' : '',
+                to_session: targetSession,
+            });
+            closeActionModal();
+            showToast('Tap Race challenge sent!', 'info');
+        });
+    });
+
+    // --- Tap Race Socket Events ---
+
+    socket.on('tap_error', (data) => {
+        showToast(data.message, 'error');
+    });
+
+    socket.on('tap_declined', (data) => {
+        showToast(`${tableName(data.from_table)} declined your Tap Race`, 'info');
+    });
+
+    // Incoming tap challenge
+    socket.on('tap_incoming', (data) => {
+        if (data.to_session && data.to_session !== sessionId) return;
+        tapGameId = data.game_id;
+        const modeText = data.mode === 'drink' ? `Loser buys the winner a drink!` : 'Just for fun!';
+        const tapPhoto = document.getElementById('tap-incoming-photo');
+        tapPhoto.className = 'incoming-photo hidden';
+        if (data.from_photo) {
+            tapPhoto.src = data.from_photo;
+            tapPhoto.classList.remove('hidden');
+            const senderMembers = profileMembers[data.from_table] || [];
+            const senderMember = senderMembers.find(m => m.name === data.from_name) || senderMembers[0];
+            const fc = senderMember ? senderMember.color_frame : null;
+            if (fc) tapPhoto.classList.add(`frame-${fc}`);
+        }
+        const tapChallenger = data.from_name || tableName(data.from_table);
+        document.getElementById('tap-incoming-message').textContent =
+            `${tapChallenger} challenges you to Tap Race!`;
+        document.getElementById('tap-incoming-detail').textContent = modeText;
+        document.getElementById('tap-incoming-modal').classList.remove('hidden');
+
+        if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+        sendBrowserNotification(
+            'Tap Race Challenge!',
+            `${tapChallenger} wants to race! ${modeText}`
+        );
+    });
+
+    // Accept/Decline tap
+    document.getElementById('tap-accept-btn').addEventListener('click', () => {
+        document.getElementById('tap-incoming-modal').classList.add('hidden');
+        socket.emit('tap_response', { game_id: tapGameId, accepted: true });
+    });
+
+    document.getElementById('tap-decline-btn').addEventListener('click', () => {
+        document.getElementById('tap-incoming-modal').classList.add('hidden');
+        socket.emit('tap_response', { game_id: tapGameId, accepted: false });
+        tapGameId = null;
+    });
+
+    // Tap Race start
+    socket.on('tap_start', (data) => {
+        if (data.session_a && data.session_a !== sessionId && data.session_b !== sessionId) return;
+        tapGameId = data.game_id;
+        tapOpponentTable = data.table_a === myTable ? data.table_b : data.table_a;
+        tapActive = false;
+        tapMyCount = 0;
+
+        document.getElementById('tap-them-label').textContent = tableName(tapOpponentTable).toUpperCase();
+        const modeText = data.mode === 'drink' ? `Playing for: ${data.drink}` : 'Just for fun';
+        document.getElementById('tap-game-mode').textContent = modeText;
+
+        // Reset UI
+        document.getElementById('tap-count-you').textContent = '0';
+        document.getElementById('tap-count-them').textContent = '0';
+        document.getElementById('tap-track-you').style.height = '0%';
+        document.getElementById('tap-track-them').style.height = '0%';
+        document.getElementById('tap-runner-you').style.bottom = '0%';
+        document.getElementById('tap-runner-them').style.bottom = '0%';
+
+        const tapBtn = document.getElementById('tap-tap-btn');
+        tapBtn.classList.add('hidden');
+        tapBtn.disabled = true;
+
+        const arena = document.getElementById('tap-arena');
+        arena.classList.add('hidden');
+
+        // Reset progress bar
+        const bar = document.getElementById('tap-progress-bar');
+        bar.style.transition = 'none';
+        bar.style.width = '100%';
+        bar.offsetHeight;
+
+        // Show countdown
+        const countdown = document.getElementById('tap-countdown');
+        const countdownText = document.getElementById('tap-countdown-text');
+        countdown.classList.remove('hidden');
+
+        let count = 3;
+        countdownText.textContent = count;
+        countdownText.className = 'tap-countdown-text tap-countdown-pop';
+
+        const countInterval = setInterval(() => {
+            count--;
+            if (count > 0) {
+                countdownText.textContent = count;
+                countdownText.classList.remove('tap-countdown-pop');
+                countdownText.offsetHeight;
+                countdownText.classList.add('tap-countdown-pop');
+            } else if (count === 0) {
+                countdownText.textContent = 'GO!';
+                countdownText.classList.remove('tap-countdown-pop');
+                countdownText.offsetHeight;
+                countdownText.classList.add('tap-countdown-pop');
+            } else {
+                clearInterval(countInterval);
+                countdown.classList.add('hidden');
+                arena.classList.remove('hidden');
+                tapBtn.classList.remove('hidden');
+                tapBtn.disabled = false;
+                tapActive = true;
+
+                // Start progress bar countdown (10s)
+                bar.style.transition = 'width 10s linear';
+                bar.style.width = '0%';
+
+                if (navigator.vibrate) navigator.vibrate(100);
+            }
+        }, 1000);
+
+        document.getElementById('tap-game-modal').classList.remove('hidden');
+    });
+
+    // TAP button — handle both click and touch for max responsiveness
+    const tapBtn = document.getElementById('tap-tap-btn');
+
+    function handleTap(e) {
+        e.preventDefault();
+        if (!tapActive || !tapGameId) return;
+
+        tapMyCount++;
+        document.getElementById('tap-count-you').textContent = tapMyCount;
+
+        // Animate runner locally for instant feedback
+        const maxTaps = 150;
+        const pct = Math.min((tapMyCount / maxTaps) * 100, 100);
+        document.getElementById('tap-track-you').style.height = pct + '%';
+        document.getElementById('tap-runner-you').style.bottom = pct + '%';
+
+        // Bounce the runner
+        const runner = document.getElementById('tap-runner-you');
+        runner.classList.remove('tap-runner-bounce');
+        runner.offsetHeight;
+        runner.classList.add('tap-runner-bounce');
+
+        // Bump the count
+        const countEl = document.getElementById('tap-count-you');
+        countEl.classList.remove('tap-count-bump');
+        countEl.offsetHeight;
+        countEl.classList.add('tap-count-bump');
+
+        socket.emit('tap_tap', {
+            game_id: tapGameId,
+            table: myTable,
+        });
+
+        if (navigator.vibrate) navigator.vibrate(10);
+    }
+
+    tapBtn.addEventListener('touchstart', handleTap, { passive: false });
+    tapBtn.addEventListener('mousedown', handleTap);
+
+    // Live score updates
+    socket.on('tap_update', (data) => {
+        const isA = (myTable === document.getElementById('tap-game-mode').dataset.tableA);
+        // Determine which count is mine and which is theirs
+        // We stored table_a in tap_start, so we need to check
+        const myCount = tapMyCount; // Use local count for responsiveness
+        let theirCount;
+
+        // We need to figure out if we are table_a or table_b
+        // Use tapOpponentTable to determine
+        if (tapOpponentTable) {
+            // data.count_a is for table_a, data.count_b is for table_b
+            // We don't know directly which we are, so use opponent
+            // If opponent is table_b, we are table_a, etc.
+            // Simpler: just update their count from the data
+            const totalOther = (data.count_a + data.count_b) - tapMyCount;
+            theirCount = Math.max(0, totalOther);
+        } else {
+            theirCount = 0;
+        }
+
+        document.getElementById('tap-count-them').textContent = theirCount;
+
+        const maxTaps = 150;
+        const theirPct = Math.min((theirCount / maxTaps) * 100, 100);
+        document.getElementById('tap-track-them').style.height = theirPct + '%';
+        document.getElementById('tap-runner-them').style.bottom = theirPct + '%';
+    });
+
+    // Tap Race result
+    socket.on('tap_result', (data) => {
+        if (data.session_a && data.session_a !== sessionId && data.session_b !== sessionId) return;
+        tapActive = false;
+        document.getElementById('tap-game-modal').classList.add('hidden');
+
+        const resultIcon = document.getElementById('tap-result-icon');
+        const resultTitle = document.getElementById('tap-result-title');
+        const resultDrink = document.getElementById('tap-result-drink');
+        const resultScores = document.getElementById('tap-result-scores');
+
+        // Show scores
+        const myScore = tapMyCount;
+        const theirScore = (data.count_a + data.count_b) - tapMyCount;
+        const opponentLabel = tableName(tapOpponentTable);
+        resultScores.textContent = `You: ${myScore}  vs  ${opponentLabel}: ${theirScore}`;
+
+        if (data.result === 'draw') {
+            resultIcon.textContent = '🤝';
+            resultTitle.textContent = "It's a tie!";
+            resultTitle.className = 'rps-result-title';
+        } else if (data.result === 'win') {
+            resultIcon.textContent = '🏆';
+            resultTitle.textContent = 'You win!';
+            resultTitle.className = 'rps-result-title rps-result-win';
+        } else {
+            resultIcon.textContent = '😅';
+            resultTitle.textContent = 'So close!';
+            resultTitle.className = 'rps-result-title rps-result-lose';
+            if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 200]);
+        }
+
+        // Drink wager
+        if (data.mode === 'drink' && data.drink) {
+            resultDrink.classList.remove('hidden');
+            resultDrink.classList.remove('drink-winner', 'drink-loser');
+            if (data.result === 'win') {
+                resultDrink.classList.add('drink-winner');
+                resultDrink.textContent = `Go to the bar to collect your drink from ${playerName(data.loser)}!`;
+            } else if (data.result === 'lose') {
+                resultDrink.classList.add('drink-loser');
+                resultDrink.textContent = `Go to the bar now and buy ${playerName(data.winner)} a drink!`;
+            } else {
+                resultDrink.textContent = `It's a tie — no one pays!`;
+            }
+        } else {
+            resultDrink.classList.add('hidden');
+        }
+
+        tapOpponentTable = data.table_a === myTable ? data.table_b : data.table_a;
+
+        document.getElementById('tap-result-modal').classList.remove('hidden');
+        tapGameId = null;
+    });
+
+    // Tap result modal buttons
+    document.getElementById('tap-result-close').addEventListener('click', () => {
+        document.getElementById('tap-result-modal').classList.add('hidden');
+    });
+
+    // ===== 2 Truths 1 Lie =====
+    let ttolGameId = null;
+    let ttolMode = null;
+    let ttolDrink = null;
+    let ttolOpponentTable = null;
+    let ttolLieIndex = null;
+    let ttolGuessIndex = null;
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // TTOL button -> show setup
+    document.getElementById('ttol-btn').addEventListener('click', () => {
+        document.getElementById('action-step').classList.add('hidden');
+        document.getElementById('drink-menu-step').classList.add('hidden');
+        document.getElementById('rps-setup-step').classList.add('hidden');
+        document.getElementById('bomb-setup-step').classList.add('hidden');
+        document.getElementById('tap-setup-step').classList.add('hidden');
+        document.getElementById('ttol-setup-step').classList.remove('hidden');
+        document.querySelectorAll('.ttol-mode-btn').forEach(b => b.classList.remove('active'));
+    });
+
+    // Mode selection — sends challenge immediately
+    document.querySelectorAll('.ttol-mode-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            ttolMode = btn.dataset.mode;
+            socket.emit('ttol_challenge', {
+                from_table: myTable,
+                to_table: targetTable,
+                mode: ttolMode,
+                drink: ttolMode === 'drink' ? 'drink' : '',
+                to_session: targetSession,
+            });
+            closeActionModal();
+            showToast('2 Truths 1 Lie challenge sent!', 'info');
+        });
+    });
+
+    // --- TTOL Socket Events ---
+
+    socket.on('ttol_error', (data) => {
+        showToast(data.message, 'error');
+    });
+
+    socket.on('ttol_declined', (data) => {
+        showToast(`${tableName(data.from_table)} declined your 2 Truths 1 Lie`, 'info');
+    });
+
+    // Incoming TTOL challenge
+    socket.on('ttol_incoming', (data) => {
+        if (data.to_session && data.to_session !== sessionId) return;
+        ttolGameId = data.game_id;
+        const modeText = data.mode === 'drink' ? `Loser buys the winner a drink!` : 'Just for fun!';
+        const ttolPhoto = document.getElementById('ttol-incoming-photo');
+        ttolPhoto.className = 'incoming-photo hidden';
+        if (data.from_photo) {
+            ttolPhoto.src = data.from_photo;
+            ttolPhoto.classList.remove('hidden');
+            const senderMembers = profileMembers[data.from_table] || [];
+            const senderMember = senderMembers.find(m => m.name === data.from_name) || senderMembers[0];
+            const fc = senderMember ? senderMember.color_frame : null;
+            if (fc) ttolPhoto.classList.add(`frame-${fc}`);
+        }
+        const challenger = data.from_name || tableName(data.from_table);
+        document.getElementById('ttol-incoming-message').textContent =
+            `${challenger} challenges you to 2 Truths 1 Lie!`;
+        document.getElementById('ttol-incoming-detail').textContent = modeText;
+        document.getElementById('ttol-incoming-modal').classList.remove('hidden');
+
+        if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+        sendBrowserNotification(
+            '2 Truths 1 Lie!',
+            `${challenger} wants to play! ${modeText}`
+        );
+    });
+
+    // Accept/Decline TTOL
+    document.getElementById('ttol-accept-btn').addEventListener('click', () => {
+        document.getElementById('ttol-incoming-modal').classList.add('hidden');
+        socket.emit('ttol_response', { game_id: ttolGameId, accepted: true });
+    });
+
+    document.getElementById('ttol-decline-btn').addEventListener('click', () => {
+        document.getElementById('ttol-incoming-modal').classList.add('hidden');
+        socket.emit('ttol_response', { game_id: ttolGameId, accepted: false });
+        ttolGameId = null;
+    });
+
+    // --- Write Phase ---
+
+    function ttolValidateForm() {
+        const allFilled = [0, 1, 2].every(i =>
+            document.getElementById(`ttol-stmt-${i}`).value.trim().length > 0
+        );
+        const lieMarked = ttolLieIndex !== null;
+        const btn = document.getElementById('ttol-submit-btn');
+        if (allFilled && lieMarked) {
+            btn.disabled = false;
+            btn.textContent = 'Submit!';
+        } else {
+            btn.disabled = true;
+            btn.textContent = 'Fill all 3 & mark the lie';
+        }
+    }
+
+    // Input change validation
+    [0, 1, 2].forEach(i => {
+        document.getElementById(`ttol-stmt-${i}`).addEventListener('input', ttolValidateForm);
+    });
+
+    // Lie toggle buttons
+    document.querySelectorAll('.ttol-lie-toggle').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const idx = parseInt(btn.dataset.idx);
+
+            // Reset all toggles
+            document.querySelectorAll('.ttol-lie-toggle').forEach(b => {
+                b.textContent = '✓ TRUTH';
+                b.classList.remove('active');
+            });
+            document.querySelectorAll('.ttol-statement-row').forEach(r => {
+                r.classList.remove('ttol-row-lie');
+            });
+
+            // Set this one as lie
+            ttolLieIndex = idx;
+            btn.textContent = '✗ LIE';
+            btn.classList.add('active');
+            document.getElementById(`ttol-row-${idx}`).classList.add('ttol-row-lie');
+
+            if (navigator.vibrate) navigator.vibrate(15);
+            ttolValidateForm();
+        });
+    });
+
+    // TTOL game start — enter write phase
+    socket.on('ttol_start', (data) => {
+        if (data.session_a && data.session_a !== sessionId && data.session_b !== sessionId) return;
+        ttolGameId = data.game_id;
+        ttolOpponentTable = data.table_a === myTable ? data.table_b : data.table_a;
+        ttolLieIndex = null;
+        ttolGuessIndex = null;
+
+        document.getElementById('ttol-write-vs').textContent = `vs ${tableName(ttolOpponentTable)}`;
+        const modeText = data.mode === 'drink' ? `Playing for: ${data.drink}` : 'Just for fun';
+        document.getElementById('ttol-write-mode').textContent = modeText;
+
+        // Reset form
+        for (let i = 0; i < 3; i++) {
+            const input = document.getElementById(`ttol-stmt-${i}`);
+            input.value = '';
+            input.disabled = false;
+        }
+        document.querySelectorAll('.ttol-lie-toggle').forEach(btn => {
+            btn.textContent = '✓ TRUTH';
+            btn.classList.remove('active');
+            btn.disabled = false;
+        });
+        document.querySelectorAll('.ttol-statement-row').forEach(r => {
+            r.classList.remove('ttol-row-lie');
+        });
+        document.getElementById('ttol-submit-btn').disabled = true;
+        document.getElementById('ttol-submit-btn').textContent = 'Fill all 3 & mark the lie';
+        document.getElementById('ttol-submit-btn').classList.remove('hidden');
+        document.getElementById('ttol-write-waiting').classList.add('hidden');
+
+        // Timer bar: 90 seconds
+        const bar = document.getElementById('ttol-write-timer-bar');
+        bar.style.transition = 'none';
+        bar.style.width = '100%';
+        bar.offsetHeight;
+        bar.style.transition = 'width 90s linear';
+        bar.style.width = '0%';
+
+        document.getElementById('ttol-write-modal').classList.remove('hidden');
+        // Auto-focus first input
+        setTimeout(() => document.getElementById('ttol-stmt-0').focus(), 300);
+    });
+
+    // Submit statements
+    document.getElementById('ttol-submit-btn').addEventListener('click', () => {
+        const statements = [0, 1, 2].map(i => document.getElementById(`ttol-stmt-${i}`).value.trim());
+        if (statements.some(s => s.length === 0) || ttolLieIndex === null) return;
+
+        socket.emit('ttol_submit', {
+            game_id: ttolGameId,
+            table: myTable,
+            statements: statements,
+            lie_index: ttolLieIndex,
+        });
+
+        // Lock form and show waiting
+        document.getElementById('ttol-submit-btn').classList.add('hidden');
+        document.getElementById('ttol-write-waiting').classList.remove('hidden');
+        for (let i = 0; i < 3; i++) {
+            document.getElementById(`ttol-stmt-${i}`).disabled = true;
+        }
+        document.querySelectorAll('.ttol-lie-toggle').forEach(btn => btn.disabled = true);
+    });
+
+    // Waiting notification
+    socket.on('ttol_waiting', (data) => {
+        // Already showing waiting UI from submit handler
+    });
+
+    // --- Guess Phase ---
+
+    socket.on('ttol_guess_phase', (data) => {
+        if (data.session_a && data.session_a !== sessionId && data.session_b !== sessionId) return;
+        // Close write modal
+        document.getElementById('ttol-write-modal').classList.add('hidden');
+        ttolGuessIndex = null;
+
+        // Set header
+        document.getElementById('ttol-guess-vs').textContent =
+            `${tableName(data.opponent_table)}'s Statements`;
+
+        // Render 3 statement cards with staggered entrance
+        const container = document.getElementById('ttol-guess-cards');
+        container.innerHTML = data.statements.map((stmt, i) => `
+            <div class="ttol-guess-card ttol-card-entrance" data-idx="${i}" style="animation-delay: ${i * 0.12}s">
+                <span class="ttol-guess-card-number">${i + 1}</span>
+                <span class="ttol-guess-card-text">${escapeHtml(stmt)}</span>
+            </div>
+        `).join('');
+
+        // Add click handlers
+        container.querySelectorAll('.ttol-guess-card').forEach(card => {
+            card.addEventListener('click', () => {
+                ttolGuessIndex = parseInt(card.dataset.idx);
+                container.querySelectorAll('.ttol-guess-card').forEach(c => c.classList.remove('selected'));
+                card.classList.add('selected');
+                document.getElementById('ttol-guess-btn').disabled = false;
+                if (navigator.vibrate) navigator.vibrate(15);
+            });
+        });
+
+        document.getElementById('ttol-guess-btn').disabled = true;
+        document.getElementById('ttol-guess-btn').classList.remove('hidden');
+        document.getElementById('ttol-guess-waiting').classList.add('hidden');
+
+        // Timer bar: 60 seconds
+        const bar = document.getElementById('ttol-guess-timer-bar');
+        bar.style.transition = 'none';
+        bar.style.width = '100%';
+        bar.offsetHeight;
+        bar.style.transition = 'width 60s linear';
+        bar.style.width = '0%';
+
+        document.getElementById('ttol-guess-modal').classList.remove('hidden');
+        if (navigator.vibrate) navigator.vibrate(100);
+    });
+
+    // Submit guess
+    document.getElementById('ttol-guess-btn').addEventListener('click', () => {
+        if (ttolGuessIndex === null) return;
+
+        socket.emit('ttol_guess', {
+            game_id: ttolGameId,
+            table: myTable,
+            guess: ttolGuessIndex,
+        });
+
+        document.getElementById('ttol-guess-btn').classList.add('hidden');
+        document.getElementById('ttol-guess-waiting').classList.remove('hidden');
+        // Disable card clicks
+        document.querySelectorAll('.ttol-guess-card').forEach(c => {
+            c.style.pointerEvents = 'none';
+        });
+    });
+
+    // --- TTOL Result ---
+
+    socket.on('ttol_result', (data) => {
+        if (data.session_a && data.session_a !== sessionId && data.session_b !== sessionId) return;
+        document.getElementById('ttol-write-modal').classList.add('hidden');
+        document.getElementById('ttol-guess-modal').classList.add('hidden');
+
+        if (data.result === 'cancelled') {
+            showToast(data.message || 'Game cancelled', 'info');
+            ttolGameId = null;
+            return;
+        }
+
+        const resultIcon = document.getElementById('ttol-result-icon');
+        const resultTitle = document.getElementById('ttol-result-title');
+        const resultDrink = document.getElementById('ttol-result-drink');
+
+        if (data.result === 'draw') {
+            resultIcon.textContent = '🤝';
+            resultTitle.textContent = "It's a draw!";
+            resultTitle.className = 'rps-result-title rps-result-tie';
+        } else if (data.result === 'win') {
+            resultIcon.textContent = '🎉';
+            resultTitle.textContent = 'You spotted the lie!';
+            resultTitle.className = 'rps-result-title rps-result-win';
+        } else {
+            resultIcon.textContent = '😔';
+            resultTitle.textContent = 'They spotted yours!';
+            resultTitle.className = 'rps-result-title rps-result-lose';
+            if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 200]);
+        }
+
+        // Render the big reveal
+        const isTableA = myTable === data.table_a;
+        const myStatements = isTableA ? data.statements_a : data.statements_b;
+        const myLieIdx = isTableA ? data.lie_index_a : data.lie_index_b;
+        const theirStatements = isTableA ? data.statements_b : data.statements_a;
+        const theirLieIdx = isTableA ? data.lie_index_b : data.lie_index_a;
+        const myGuess = isTableA ? data.guess_a : data.guess_b;
+        const theirGuess = isTableA ? data.guess_b : data.guess_a;
+        const opponentTable = isTableA ? data.table_b : data.table_a;
+
+        const revealHtml = `
+            <div class="ttol-reveal-section">
+                <p class="ttol-reveal-label">${escapeHtml(tableName(opponentTable))}'s statements:</p>
+                ${theirStatements.map((s, i) => `
+                    <div class="ttol-reveal-stmt ${i === theirLieIdx ? 'ttol-reveal-lie' : 'ttol-reveal-truth'}
+                        ${i === myGuess ? 'ttol-reveal-guessed' : ''}"
+                        style="animation-delay: ${i * 0.15}s">
+                        <span class="ttol-reveal-tag">${i === theirLieIdx ? '✗ LIE' : '✓ TRUTH'}</span>
+                        <span class="ttol-reveal-text">${escapeHtml(s)}</span>
+                        ${i === myGuess ? '<span class="ttol-reveal-your-guess">👈 Your guess</span>' : ''}
+                    </div>
+                `).join('')}
+            </div>
+            <div class="ttol-reveal-section">
+                <p class="ttol-reveal-label">Your statements:</p>
+                ${myStatements.map((s, i) => `
+                    <div class="ttol-reveal-stmt ${i === myLieIdx ? 'ttol-reveal-lie' : 'ttol-reveal-truth'}
+                        ${i === theirGuess ? 'ttol-reveal-guessed' : ''}"
+                        style="animation-delay: ${(i + 3) * 0.15}s">
+                        <span class="ttol-reveal-tag">${i === myLieIdx ? '✗ LIE' : '✓ TRUTH'}</span>
+                        <span class="ttol-reveal-text">${escapeHtml(s)}</span>
+                        ${i === theirGuess ? '<span class="ttol-reveal-their-guess">Their guess</span>' : ''}
+                    </div>
+                `).join('')}
+            </div>
+        `;
+        document.getElementById('ttol-result-reveal').innerHTML = revealHtml;
+
+        // Drink wager
+        if (data.mode === 'drink' && data.drink && data.result !== 'draw') {
+            resultDrink.classList.remove('hidden');
+            resultDrink.classList.remove('drink-winner', 'drink-loser');
+            if (data.result === 'win') {
+                resultDrink.classList.add('drink-winner');
+                resultDrink.textContent = `Go to the bar to collect your drink from ${playerName(data.loser)}!`;
+            } else {
+                resultDrink.classList.add('drink-loser');
+                resultDrink.textContent = `Go to the bar now and buy ${playerName(data.winner)} a drink!`;
+            }
+        } else {
+            resultDrink.classList.add('hidden');
+        }
+
+        ttolOpponentTable = opponentTable;
+        document.getElementById('ttol-result-modal').classList.remove('hidden');
+        ttolGameId = null;
+    });
+
+    // TTOL result modal buttons
+    document.getElementById('ttol-result-close').addEventListener('click', () => {
+        document.getElementById('ttol-result-modal').classList.add('hidden');
+    });
+
+</script>
+{% endblock %}

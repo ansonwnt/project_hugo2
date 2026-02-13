@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shamrock Admin</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin.css') }}">
+</head>
+<body>
+    <div class="admin-page">
+        <header class="admin-header">
+            <h1>Shamrock <span>Admin</span></h1>
+            <nav class="admin-nav">
+                <a href="{{ url_for('admin_dashboard') }}" class="active">Dashboard</a>
+                <a href="{{ url_for('admin_menu') }}">Menu</a>
+                <a href="{{ url_for('admin_logout') }}">Logout</a>
+            </nav>
+        </header>
+
+        <div class="admin-content">
+            <!-- Stats Cards -->
+            <div class="admin-stats">
+                <div class="stat-card">
+                    <div class="stat-value">{{ occupied }}/{{ total_tables }}</div>
+                    <div class="stat-label">Tables Occupied</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ connected }}</div>
+                    <div class="stat-label">Connected</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ active_games }}</div>
+                    <div class="stat-label">Active Games</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ total_messages }}</div>
+                    <div class="stat-label">Messages Sent</div>
+                </div>
+            </div>
+
+            <!-- Broadcast Message -->
+            <div class="admin-section">
+                <h2>Broadcast Message</h2>
+                <form method="POST" action="{{ url_for('admin_broadcast') }}" class="admin-broadcast-form">
+                    <input type="text" name="message" class="admin-input" placeholder="Type a message to all tables..." maxlength="200" required>
+                    <button type="submit" class="btn btn-primary">Send to All</button>
+                </form>
+            </div>
+
+            <!-- Tables Overview -->
+            <div class="admin-section">
+                <div class="admin-section-header">
+                    <h2>Tables</h2>
+                    <div class="admin-section-actions">
+                        <form method="POST" action="{{ url_for('admin_settings_tables') }}" class="table-count-form">
+                            <label>Count:</label>
+                            <input type="number" name="table_count" value="{{ table_count }}" min="1" max="50" class="admin-input admin-input-xs">
+                            <button type="submit" class="btn btn-small btn-secondary">Update</button>
+                        </form>
+                        <form method="POST" action="{{ url_for('admin_tables_reset') }}" onsubmit="return confirm('Reset ALL tables? This will kick everyone.')">
+                            <button type="submit" class="btn btn-small btn-danger">Reset All</button>
+                        </form>
+                    </div>
+                </div>
+                <div class="admin-table-grid">
+                    {% for t in tables %}
+                    <div class="admin-table-card {{ 'occupied' if t.is_occupied else 'empty' }}">
+                        <div class="admin-table-number">{{ t.table_number }}</div>
+                        {% if t.is_occupied %}
+                        <div class="admin-table-info">
+                            {% for m in t.members %}
+                            <div class="admin-member">
+                                {% if m.photo_url %}
+                                <img src="{{ m.photo_url }}" class="admin-table-photo" alt="">
+                                {% endif %}
+                                <span class="admin-table-name">{{ m.name }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <form method="POST" action="{{ url_for('admin_kick_table', table_number=t.table_number) }}" onsubmit="return confirm('Kick all members from table {{ t.table_number }}?')">
+                            <button type="submit" class="btn-kick" title="Kick All">x</button>
+                        </form>
+                        {% else %}
+                        <div class="admin-table-info">
+                            <span class="admin-table-empty">Empty</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Two-column layout for stats and feed -->
+            <div class="admin-two-col">
+                <!-- Drink Order Stats -->
+                <div class="admin-section">
+                    <h2>Top Drinks Tonight</h2>
+                    {% if drink_stats %}
+                    <div class="drink-stats-list">
+                        {% for ds in drink_stats %}
+                        <div class="drink-stat-row">
+                            <span class="drink-stat-rank">{{ loop.index }}</span>
+                            <span class="drink-stat-name">{{ ds.drink_name }}</span>
+                            <span class="drink-stat-count">{{ ds.count }}x</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="admin-empty-state">No drinks sent yet</p>
+                    {% endif %}
+                </div>
+
+                <!-- Activity Feed -->
+                <div class="admin-section">
+                    <div class="admin-section-header">
+                        <h2>Activity Feed</h2>
+                        <form method="POST" action="{{ url_for('admin_activity_clear') }}" onsubmit="return confirm('Clear all activity?')">
+                            <button type="submit" class="btn btn-small btn-secondary">Clear</button>
+                        </form>
+                    </div>
+                    {% if activity %}
+                    <div class="activity-feed">
+                        {% for a in activity %}
+                        <div class="activity-item activity-{{ a.event_type }}">
+                            <span class="activity-icon">
+                                {% if a.event_type == 'join' %}+
+                                {% elif a.event_type == 'leave' %}-
+                                {% elif a.event_type == 'drink' %}D
+                                {% elif a.event_type == 'game' %}G
+                                {% elif a.event_type == 'broadcast' %}!
+                                {% elif a.event_type == 'message' %}M
+                                {% else %}*{% endif %}
+                            </span>
+                            <span class="activity-text">{{ a.description }}</span>
+                            <span class="activity-time">{{ a.created_at[11:16] }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="admin-empty-state">No activity yet</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Auto-refresh every 10 seconds
+        setTimeout(() => location.reload(), 10000);
+    </script>
+</body>
+</html>

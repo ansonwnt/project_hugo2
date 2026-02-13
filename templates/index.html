@@ -1,0 +1,766 @@
+{% extends "base.html" %}
+
+{% block title %}Select Your Table{% endblock %}
+
+{% block content %}
+<div class="landing-page">
+    <div class="landing-header">
+        <h1 class="logo">Shamrock</h1>
+        <p class="tagline">Connect with other tables</p>
+    </div>
+
+    <!-- PWA Install Banner -->
+    <div id="install-banner" class="install-banner hidden">
+        <button id="install-dismiss" class="install-dismiss">&times;</button>
+        <div id="install-android" class="hidden">
+            <button id="install-btn" class="btn btn-primary" style="width:100%;gap:8px;">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                Install App
+            </button>
+        </div>
+        <div id="install-ios" class="hidden">
+            <p style="margin:0;font-size:14px;color:var(--text-secondary);line-height:1.6;">
+                Tap
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" style="vertical-align:middle;"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13"/></svg>
+                Share, then <strong style="color:var(--text-primary);">"Add to Home Screen"</strong>
+            </p>
+        </div>
+    </div>
+
+    <!-- Step 0: Onboarding (first-time visitors) -->
+    <div id="onboarding-step" class="onboarding-step hidden">
+        <div class="onboarding-slides" id="onboarding-slides">
+            <!-- Slide 1: Welcome -->
+            <div class="onboarding-slide">
+                <svg class="onboarding-icon" viewBox="0 0 80 80" fill="none">
+                    <circle cx="40" cy="40" r="36" stroke="currentColor" stroke-width="3"/>
+                    <path d="M28 42 C28 28, 52 28, 52 42" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+                    <circle cx="30" cy="34" r="3" fill="currentColor"/>
+                    <circle cx="50" cy="34" r="3" fill="currentColor"/>
+                </svg>
+                <h2>Welcome to Shamrock</h2>
+                <p>The social app for this bar. Connect with people at other tables — buy them a drink, challenge them to a game, or just say hi.</p>
+            </div>
+            <!-- Slide 2: How to interact -->
+            <div class="onboarding-slide">
+                <svg class="onboarding-icon" viewBox="0 0 80 80" fill="none">
+                    <rect x="8" y="44" width="24" height="24" rx="4" stroke="currentColor" stroke-width="2.5"/>
+                    <rect x="48" y="44" width="24" height="24" rx="4" stroke="currentColor" stroke-width="2.5"/>
+                    <circle cx="20" cy="56" r="5" fill="currentColor" opacity="0.5"/>
+                    <circle cx="60" cy="56" r="5" fill="currentColor" opacity="0.5"/>
+                    <path d="M32 52 h16" stroke="currentColor" stroke-width="2" stroke-dasharray="4 3"/>
+                    <path d="M44 48 l4 4 -4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <h2>How to Interact</h2>
+                <div class="onboarding-steps-list">
+                    <div class="onboarding-step-row">
+                        <div class="onboarding-step-number">1</div>
+                        <span class="onboarding-step-text">See someone interesting? Tap their table on the floor plan</span>
+                    </div>
+                    <div class="onboarding-step-row">
+                        <div class="onboarding-step-number">2</div>
+                        <span class="onboarding-step-text">Choose an action — buy a drink, play a game, or send a message</span>
+                    </div>
+                    <div class="onboarding-step-row">
+                        <div class="onboarding-step-number">3</div>
+                        <span class="onboarding-step-text">They'll get a notification and can accept or respond</span>
+                    </div>
+                </div>
+            </div>
+            <!-- Slide 3: What you can do -->
+            <div class="onboarding-slide">
+                <svg class="onboarding-icon" viewBox="0 0 80 80" fill="none">
+                    <rect x="12" y="20" width="56" height="40" rx="6" stroke="currentColor" stroke-width="3"/>
+                    <circle cx="30" cy="40" r="8" stroke="currentColor" stroke-width="2.5"/>
+                    <circle cx="50" cy="40" r="8" stroke="currentColor" stroke-width="2.5"/>
+                    <path d="M38 40h4" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+                </svg>
+                <h2>What You Can Do</h2>
+                <div class="onboarding-features">
+                    <div class="onboarding-feature-item">
+                        <span class="feat-emoji">&#x1F37A;</span>
+                        <span class="feat-text">Buy a drink from the menu and send it to their table</span>
+                    </div>
+                    <div class="onboarding-feature-item">
+                        <span class="feat-emoji">&#x1F3AE;</span>
+                        <span class="feat-text">Challenge them to Rock Paper Scissors, Bomb Pass, Tap Race, or 2 Truths 1 Lie</span>
+                    </div>
+                    <div class="onboarding-feature-item">
+                        <span class="feat-emoji">&#x1F4AC;</span>
+                        <span class="feat-text">Send a note with your drink to break the ice</span>
+                    </div>
+                </div>
+            </div>
+            <!-- Slide 4: Enable notifications -->
+            <div class="onboarding-slide">
+                <svg class="onboarding-icon" viewBox="0 0 80 80" fill="none">
+                    <path d="M40 8 v6" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+                    <path d="M24 60 h32" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+                    <path d="M20 60 C20 36, 22 24, 40 20 C58 24, 60 36, 60 60" stroke="currentColor" stroke-width="3"/>
+                    <circle cx="40" cy="68" r="6" stroke="currentColor" stroke-width="2.5"/>
+                </svg>
+                <h2>Don't Miss a Thing</h2>
+                <p>Get notified instantly when someone buys you a drink or challenges you to a game. Without notifications, you might miss it!</p>
+                <button class="onboarding-notif-btn" id="onboarding-notif-btn">Enable Notifications</button>
+                <div id="onboarding-notif-status" class="onboarding-notif-status hidden"></div>
+                <div id="onboarding-notif-help" class="onboarding-notif-help hidden">
+                    <p id="notif-help-text"></p>
+                </div>
+            </div>
+        </div>
+        <div class="onboarding-nav">
+            <button class="onboarding-skip" id="onboarding-skip">Skip</button>
+            <div class="onboarding-dots" id="onboarding-dots">
+                <div class="onboarding-dot active"></div>
+                <div class="onboarding-dot"></div>
+                <div class="onboarding-dot"></div>
+                <div class="onboarding-dot"></div>
+            </div>
+            <button class="onboarding-next" id="onboarding-next">Next</button>
+        </div>
+    </div>
+
+    <!-- Step 1: Profile -->
+    <div id="profile-step" class="profile-step hidden">
+        <h2>What's your name?</h2>
+
+        <input type="text" id="profile-name" class="profile-name-input"
+               placeholder="Your first name" maxlength="20" autocomplete="off">
+
+        <div class="profile-photo-upload">
+            <div id="photo-preview" class="photo-preview">
+                <span class="photo-preview-icon">+</span>
+                <span class="photo-preview-text">Add Photo</span>
+            </div>
+            <div class="photo-choice-buttons">
+                <button type="button" id="photo-camera-btn" class="photo-choice-btn">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                    Take Photo
+                </button>
+                <button type="button" id="photo-album-btn" class="photo-choice-btn">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                    Album
+                </button>
+            </div>
+            <input type="file" id="profile-photo-camera" accept="image/*" capture="user" style="display:none;">
+            <input type="file" id="profile-photo-album" accept="image/*" style="display:none;">
+        </div>
+
+        <div class="color-picker-section">
+            <p class="color-picker-label">Pick your frame color <span class="optional-tag">(optional)</span></p>
+            <div class="color-picker-buttons">
+                <button type="button" class="color-btn color-btn-red" data-color="red"></button>
+                <button type="button" class="color-btn color-btn-yellow" data-color="yellow"></button>
+                <button type="button" class="color-btn color-btn-green" data-color="green"></button>
+            </div>
+        </div>
+
+        <button id="profile-next-btn" class="btn btn-primary btn-large" disabled>
+            Next
+        </button>
+    </div>
+
+    <!-- Step 2: Table Selection -->
+    <div id="table-step" class="table-selector hidden">
+        <div class="table-grid-header">
+            <h2>Select your table</h2>
+            <button id="view-toggle" class="view-toggle-btn" title="Switch view">
+                <svg id="view-icon-map" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 6v16l7-4 8 4 7-4V2l-7 4-8-4-7 4z"/><path d="M8 2v16M16 6v16"/></svg>
+                <svg id="view-icon-grid" class="hidden" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+            </button>
+        </div>
+
+        <div id="table-numpad" class="table-numpad">
+            <!-- Generated dynamically from /api/tables -->
+        </div>
+
+        <div id="floor-plan-wrapper" class="floor-plan-wrapper hidden">
+            <div class="floor-tabs">
+                <button class="floor-tab active" data-floor="1">1/F</button>
+                <button class="floor-tab" data-floor="2">2/F</button>
+            </div>
+            <div id="floor-plan-1" class="floor-plan">
+                <div class="fp-element fp-door"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M3 21V3h12v18M15 12h-2"/></svg> Door</div>
+                <div class="fp-element fp-stairs"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M4 20h4v-4h4v-4h4v-4h4"/></svg> Stairs</div>
+            </div>
+            <div id="floor-plan-2" class="floor-plan hidden">
+                <div class="fp-element fp-balcony">Balcony</div>
+                <div class="fp-element fp-stairs-2f"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M4 20h4v-4h4v-4h4v-4h4"/></svg> Stairs</div>
+            </div>
+        </div>
+
+        <div class="selected-display">
+            <span id="selected-table">-</span>
+        </div>
+
+        <button id="join-btn" class="btn btn-primary btn-large" disabled>
+            Join Table
+        </button>
+
+        <p class="privacy-notice">Other guests will see your name and photo</p>
+    </div>
+
+    <div id="error-message" class="error-message hidden"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // ===== Hidden Admin Trigger (5 taps on logo) =====
+    (function() {
+        const logo = document.querySelector('.logo');
+        let tapCount = 0;
+        let tapTimer = null;
+        logo.addEventListener('click', () => {
+            tapCount++;
+            clearTimeout(tapTimer);
+            if (tapCount >= 5) {
+                tapCount = 0;
+                window.location.href = '/admin';
+                return;
+            }
+            tapTimer = setTimeout(() => { tapCount = 0; }, 2000);
+        });
+    })();
+
+    // ===== PWA Install Prompt =====
+    let deferredPrompt = null;
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+
+    if (!isStandalone && !localStorage.getItem('shamrockDismissInstall')) {
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        const banner = document.getElementById('install-banner');
+
+        if (isIOS) {
+            // iOS: show manual instructions
+            document.getElementById('install-ios').classList.remove('hidden');
+            banner.classList.remove('hidden');
+        }
+
+        // Android/Chrome: capture beforeinstallprompt
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('install-android').classList.remove('hidden');
+            banner.classList.remove('hidden');
+        });
+
+        document.getElementById('install-btn').addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const result = await deferredPrompt.userChoice;
+                if (result.outcome === 'accepted') banner.classList.add('hidden');
+                deferredPrompt = null;
+            }
+        });
+
+        document.getElementById('install-dismiss').addEventListener('click', () => {
+            banner.classList.add('hidden');
+            localStorage.setItem('shamrockDismissInstall', '1');
+        });
+    }
+
+    let selectedTable = null;
+
+    // ===== Onboarding carousel =====
+    (function() {
+        const slides = document.getElementById('onboarding-slides');
+        const dots = document.querySelectorAll('#onboarding-dots .onboarding-dot');
+        const nextBtn = document.getElementById('onboarding-next');
+        const skipBtn = document.getElementById('onboarding-skip');
+        let current = 0;
+        const total = 4;
+
+        function goToSlide(i) {
+            current = i;
+            slides.style.transform = 'translateX(-' + (i * 100) + '%)';
+            dots.forEach(function(d, idx) {
+                d.classList.toggle('active', idx === i);
+            });
+            nextBtn.textContent = (i === total - 1) ? 'Get Started' : 'Next';
+        }
+
+        function finishOnboarding() {
+            localStorage.setItem('shamrockOnboarded', '1');
+            document.getElementById('onboarding-step').classList.add('hidden');
+            document.getElementById('profile-step').classList.remove('hidden');
+        }
+
+        nextBtn.addEventListener('click', function() {
+            if (current < total - 1) goToSlide(current + 1);
+            else finishOnboarding();
+        });
+
+        skipBtn.addEventListener('click', finishOnboarding);
+
+        // Touch swipe support
+        var touchStartX = 0;
+        slides.addEventListener('touchstart', function(e) {
+            touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+        slides.addEventListener('touchend', function(e) {
+            var diff = touchStartX - e.changedTouches[0].screenX;
+            if (Math.abs(diff) > 50) {
+                if (diff > 0 && current < total - 1) goToSlide(current + 1);
+                else if (diff < 0 && current > 0) goToSlide(current - 1);
+            }
+        }, { passive: true });
+
+        // ===== Notification permission (slide 4) =====
+        var notifBtn = document.getElementById('onboarding-notif-btn');
+        var notifStatus = document.getElementById('onboarding-notif-status');
+        var notifHelp = document.getElementById('onboarding-notif-help');
+        var notifHelpText = document.getElementById('notif-help-text');
+
+        var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        var isAndroid = /Android/.test(navigator.userAgent);
+        var isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+
+        // Check if notifications are supported
+        if (!('Notification' in window)) {
+            // iOS non-PWA: notifications only work as installed PWA
+            if (isIOS && !isPWA) {
+                notifBtn.textContent = 'How to Enable';
+                notifBtn.addEventListener('click', function() {
+                    notifBtn.classList.add('hidden');
+                    notifHelp.classList.remove('hidden');
+                    notifHelpText.innerHTML =
+                        '<strong>iPhone / iPad:</strong><br>' +
+                        '1. Tap the <strong>Share</strong> button at the bottom of Safari<br>' +
+                        '2. Tap <strong>"Add to Home Screen"</strong><br>' +
+                        '3. Open the app from your home screen<br>' +
+                        '4. You\'ll be prompted to allow notifications';
+                });
+            } else {
+                notifBtn.textContent = 'Not Supported';
+                notifBtn.disabled = true;
+                notifBtn.style.opacity = '0.5';
+                notifHelp.classList.remove('hidden');
+                notifHelpText.textContent = 'Your browser does not support notifications. Try using Chrome or Safari.';
+            }
+        } else if (Notification.permission === 'granted') {
+            notifBtn.textContent = 'Notifications Enabled';
+            notifBtn.disabled = true;
+            notifBtn.style.opacity = '0.7';
+            notifStatus.textContent = 'You\'re all set!';
+            notifStatus.classList.remove('hidden');
+            notifStatus.classList.add('notif-granted');
+        } else if (Notification.permission === 'denied') {
+            notifBtn.textContent = 'Blocked';
+            notifBtn.disabled = true;
+            notifBtn.style.opacity = '0.5';
+            notifHelp.classList.remove('hidden');
+            if (isIOS) {
+                notifHelpText.innerHTML =
+                    '<strong>Notifications are blocked.</strong> To fix:<br>' +
+                    '1. Open <strong>Settings</strong> on your device<br>' +
+                    '2. Scroll down and tap <strong>Safari</strong> (or the app name if installed)<br>' +
+                    '3. Tap <strong>Notifications</strong><br>' +
+                    '4. Toggle notifications <strong>ON</strong>';
+            } else if (isAndroid) {
+                notifHelpText.innerHTML =
+                    '<strong>Notifications are blocked.</strong> To fix:<br>' +
+                    '1. Tap the <strong>lock icon</strong> in the address bar<br>' +
+                    '2. Tap <strong>Permissions</strong><br>' +
+                    '3. Set Notifications to <strong>Allow</strong>';
+            } else {
+                notifHelpText.innerHTML =
+                    '<strong>Notifications are blocked.</strong> To fix:<br>' +
+                    '1. Click the <strong>lock icon</strong> next to the URL<br>' +
+                    '2. Find <strong>Notifications</strong><br>' +
+                    '3. Change to <strong>Allow</strong>, then reload';
+            }
+        } else {
+            // permission === 'default' — can request
+            notifBtn.addEventListener('click', function() {
+                Notification.requestPermission().then(function(perm) {
+                    if (perm === 'granted') {
+                        notifBtn.textContent = 'Notifications Enabled';
+                        notifBtn.disabled = true;
+                        notifBtn.style.opacity = '0.7';
+                        notifStatus.textContent = 'You\'re all set!';
+                        notifStatus.classList.remove('hidden');
+                        notifStatus.classList.add('notif-granted');
+                        notifHelp.classList.add('hidden');
+                        // Show a test notification
+                        if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+                            navigator.serviceWorker.ready.then(function(reg) {
+                                reg.showNotification('Shamrock', { body: 'Notifications enabled! You won\'t miss a thing.', icon: '/static/icon-192.png' });
+                            });
+                        }
+                    } else if (perm === 'denied') {
+                        notifBtn.textContent = 'Blocked';
+                        notifBtn.disabled = true;
+                        notifBtn.style.opacity = '0.5';
+                        notifHelp.classList.remove('hidden');
+                        if (isAndroid) {
+                            notifHelpText.innerHTML =
+                                '<strong>Permission was denied.</strong> To fix:<br>' +
+                                '1. Tap the <strong>lock icon</strong> in the address bar<br>' +
+                                '2. Tap <strong>Permissions</strong><br>' +
+                                '3. Set Notifications to <strong>Allow</strong>';
+                        } else {
+                            notifHelpText.innerHTML =
+                                '<strong>Permission was denied.</strong> To fix:<br>' +
+                                '1. Click the <strong>lock icon</strong> next to the URL<br>' +
+                                '2. Find <strong>Notifications</strong><br>' +
+                                '3. Change to <strong>Allow</strong>, then reload';
+                        }
+                    }
+                });
+            });
+        }
+    })();
+
+    // ===== Flow control =====
+    const existingTable = localStorage.getItem('shamrockTable');
+    const existingSession = localStorage.getItem('shamrockSession');
+    const hasOnboarded = localStorage.getItem('shamrockOnboarded');
+
+    if (existingTable && existingSession) {
+        window.location.href = '/tables';
+    } else if (existingSession && !existingTable) {
+        // Profile created but no table yet — skip to table step
+        document.getElementById('onboarding-step').classList.add('hidden');
+        document.getElementById('table-step').classList.remove('hidden');
+    } else if (hasOnboarded) {
+        // Returning visitor, already onboarded — show profile step
+        document.getElementById('profile-step').classList.remove('hidden');
+    } else {
+        // First-time visitor — show onboarding
+        document.getElementById('onboarding-step').classList.remove('hidden');
+    }
+
+    // ===== View Toggle (grid / floor plan) =====
+    const floorPlanFloors = {
+        1: {
+            container: 'floor-plan-1',
+            tables: {
+                5: { top: '10%', left: '4%', width: '16%', height: '52%', label: 'Bar' },
+                1: { top: '6%', left: '70%', width: '22%', height: '20%' },
+                2: { top: '50%', left: '70%', width: '22%', height: '20%' },
+                3: { top: '72%', left: '58%', width: '36%', height: '22%' },
+                4: { top: '72%', left: '4%', width: '30%', height: '22%' },
+            }
+        },
+        2: {
+            container: 'floor-plan-2',
+            tables: {
+                6:  { top: '18%', left: '5%',  width: '16%', height: '16%' },
+                7:  { top: '44%', left: '5%',  width: '16%', height: '16%' },
+                8:  { top: '70%', left: '5%',  width: '16%', height: '16%' },
+                9:  { top: '36%', left: '30%', width: '16%', height: '16%' },
+                10: { top: '58%', left: '30%', width: '16%', height: '16%' },
+                11: { top: '18%', left: '68%', width: '26%', height: '22%' },
+                12: { top: '62%', left: '68%', width: '26%', height: '22%' },
+            }
+        }
+    };
+    let currentFloor = 1;
+    let latestTables = null;
+
+    let currentView = localStorage.getItem('shamrockViewMode') || 'floorplan';
+
+    function initView() {
+        const numpad = document.getElementById('table-numpad');
+        const fpWrapper = document.getElementById('floor-plan-wrapper');
+        const iconMap = document.getElementById('view-icon-map');
+        const iconGrid = document.getElementById('view-icon-grid');
+        if (currentView === 'floorplan') {
+            numpad.classList.add('hidden');
+            fpWrapper.classList.remove('hidden');
+            iconMap.classList.add('hidden');
+            iconGrid.classList.remove('hidden');
+        } else {
+            numpad.classList.remove('hidden');
+            fpWrapper.classList.add('hidden');
+            iconMap.classList.remove('hidden');
+            iconGrid.classList.add('hidden');
+        }
+    }
+    initView();
+
+    // Floor tab switching
+    document.querySelectorAll('.floor-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            const floor = parseInt(tab.dataset.floor);
+            currentFloor = floor;
+            document.querySelectorAll('.floor-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            document.getElementById('floor-plan-1').classList.toggle('hidden', floor !== 1);
+            document.getElementById('floor-plan-2').classList.toggle('hidden', floor !== 2);
+            if (latestTables) renderFloorPlan(latestTables);
+        });
+    });
+
+    document.getElementById('view-toggle').addEventListener('click', () => {
+        currentView = currentView === 'grid' ? 'floorplan' : 'grid';
+        localStorage.setItem('shamrockViewMode', currentView);
+        initView();
+        if (latestTables) renderFloorPlan(latestTables);
+    });
+
+    function renderFloorPlan(tables) {
+        latestTables = tables;
+
+        Object.keys(floorPlanFloors).forEach(floorKey => {
+            const floorCfg = floorPlanFloors[floorKey];
+            const fp = document.getElementById(floorCfg.container);
+            if (!fp) return;
+            fp.querySelectorAll('.fp-table').forEach(el => el.remove());
+
+            tables.forEach(t => {
+                const config = floorCfg.tables[t.table_number];
+                if (!config) return;
+
+                let className = 'fp-table';
+                let avatarHtml = '';
+
+                if (t.members && t.members.length > 0) {
+                    className += ' has-members';
+                    const show = t.members.slice(0, 2);
+                    avatarHtml = '<div class="fp-avatar-stack">';
+                    show.forEach((m, i) => {
+                        const fc = m.color_frame ? ` frame-${m.color_frame}` : '';
+                        if (m.photo_url) {
+                            avatarHtml += `<img class="fp-avatar stacked${fc}" style="z-index:${3-i}" src="${m.photo_url}" alt="">`;
+                        } else {
+                            avatarHtml += `<div class="fp-avatar stacked fp-avatar-placeholder${fc}" style="z-index:${3-i}">${m.name[0]}</div>`;
+                        }
+                    });
+                    avatarHtml += '</div>';
+                } else {
+                    className += ' empty';
+                }
+
+                const div = document.createElement('div');
+                div.className = className;
+                div.dataset.table = t.table_number;
+                div.style.top = config.top;
+                div.style.left = config.left;
+                div.style.width = config.width;
+                div.style.height = config.height;
+                div.innerHTML = `
+                    ${avatarHtml}
+                    <span class="fp-table-number">${config.label || t.table_number}</span>
+                `;
+
+                // Click to select this table
+                div.addEventListener('click', () => {
+                    // Deselect all across both floors
+                    document.querySelectorAll('.fp-table').forEach(el => el.classList.remove('selected'));
+                    document.querySelectorAll('.numpad-btn').forEach(b => b.classList.remove('selected'));
+                    div.classList.add('selected');
+                    selectedTable = t.table_number;
+                    document.getElementById('selected-table').textContent = selectedTable;
+                    document.getElementById('join-btn').disabled = false;
+                });
+
+                fp.appendChild(div);
+            });
+        });
+    }
+
+    // Fetch table status and generate numpad dynamically
+    fetch('/api/tables')
+        .then(res => res.json())
+        .then(tables => {
+            const numpad = document.getElementById('table-numpad');
+            numpad.innerHTML = '';
+            tables.forEach(t => {
+                const btn = document.createElement('button');
+                btn.className = 'numpad-btn';
+                btn.dataset.table = t.table_number;
+                if (t.members && t.members.length > 0) {
+                    const names = t.members.map(m => m.name).join(', ');
+                    btn.classList.add('has-members');
+                    btn.innerHTML = `${t.table_number}<span class="numpad-status">${names}</span>`;
+                } else {
+                    btn.textContent = t.table_number;
+                }
+                numpad.appendChild(btn);
+            });
+            attachNumpadHandlers();
+            renderFloorPlan(tables);
+        })
+        .catch(() => {});
+
+    // ===== Profile Step =====
+    const nameInput = document.getElementById('profile-name');
+    const nextBtn = document.getElementById('profile-next-btn');
+    const photoCameraInput = document.getElementById('profile-photo-camera');
+    const photoAlbumInput = document.getElementById('profile-photo-album');
+    const photoPreview = document.getElementById('photo-preview');
+    let activePhotoInput = null; // tracks which input has the selected file
+    let selectedColor = null;
+
+    // Camera button
+    document.getElementById('photo-camera-btn').addEventListener('click', () => {
+        photoCameraInput.click();
+    });
+
+    // Album button
+    document.getElementById('photo-album-btn').addEventListener('click', () => {
+        photoAlbumInput.click();
+    });
+
+    // Color picker
+    document.querySelectorAll('.color-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (btn.classList.contains('selected')) {
+                btn.classList.remove('selected');
+                selectedColor = null;
+                photoPreview.style.borderColor = '';
+                photoPreview.style.borderStyle = '';
+            } else {
+                document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                selectedColor = btn.dataset.color;
+                const colorMap = {red: '#EF4444', yellow: '#EAB308', green: '#22C55E'};
+                photoPreview.style.borderColor = colorMap[selectedColor];
+                photoPreview.style.borderStyle = 'solid';
+            }
+        });
+    });
+
+    // Enable Next button when name is entered
+    nameInput.addEventListener('input', () => {
+        nextBtn.disabled = !nameInput.value.trim();
+    });
+
+    // Shared photo preview handler
+    function handlePhotoSelected(input) {
+        if (input.files.length > 0) {
+            activePhotoInput = input;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                photoPreview.innerHTML = `<img src="${e.target.result}" alt="Photo">`;
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    photoCameraInput.addEventListener('change', () => handlePhotoSelected(photoCameraInput));
+    photoAlbumInput.addEventListener('change', () => handlePhotoSelected(photoAlbumInput));
+
+    // Submit profile and move to table selection
+    nextBtn.addEventListener('click', async () => {
+        const name = nameInput.value.trim();
+        if (!name) return;
+
+        nextBtn.disabled = true;
+        nextBtn.textContent = 'Saving...';
+
+        const sessionId = 'session_' + Math.random().toString(36).substr(2, 9);
+
+        const formData = new FormData();
+        formData.append('session_id', sessionId);
+        formData.append('name', name);
+
+        if (activePhotoInput && activePhotoInput.files.length > 0) {
+            formData.append('photo', activePhotoInput.files[0]);
+        }
+        if (selectedColor) {
+            formData.append('color_frame', selectedColor);
+        }
+
+        try {
+            const res = await fetch('/api/profile', { method: 'POST', body: formData });
+            const data = await res.json();
+            if (data.success) {
+                localStorage.setItem('shamrockSession', sessionId);
+                localStorage.setItem('shamrockProfileName', name);
+                if (data.photo_url) {
+                    localStorage.setItem('shamrockProfilePhoto', data.photo_url);
+                }
+                if (data.color_frame) {
+                    localStorage.setItem('shamrockColorFrame', data.color_frame);
+                }
+                document.getElementById('profile-step').classList.add('hidden');
+                document.getElementById('table-step').classList.remove('hidden');
+            } else {
+                const errorEl = document.getElementById('error-message');
+                errorEl.textContent = data.error || 'Failed to save profile';
+                errorEl.classList.remove('hidden');
+                setTimeout(() => errorEl.classList.add('hidden'), 3000);
+                nextBtn.disabled = false;
+                nextBtn.textContent = 'Next';
+            }
+        } catch (e) {
+            console.error('Profile creation failed:', e);
+            nextBtn.disabled = false;
+            nextBtn.textContent = 'Next';
+        }
+    });
+
+    // ===== Table Selection Step =====
+
+    // Number pad selection (all tables are joinable — multiple people per table)
+    function attachNumpadHandlers() {
+        document.querySelectorAll('.numpad-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tableNum = parseInt(btn.dataset.table);
+
+                document.querySelectorAll('.numpad-btn').forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                selectedTable = tableNum;
+                document.getElementById('selected-table').textContent = selectedTable;
+                document.getElementById('join-btn').disabled = false;
+            });
+        });
+    }
+
+    // Join button
+    let joinSocket = null;
+    document.getElementById('join-btn').addEventListener('click', () => {
+        if (!selectedTable) return;
+
+        const sessionId = localStorage.getItem('shamrockSession');
+        if (!sessionId) return;
+
+        const joinBtn = document.getElementById('join-btn');
+        joinBtn.disabled = true;
+        joinBtn.textContent = 'Joining...';
+
+        // Disconnect any previous socket from a failed attempt
+        if (joinSocket) {
+            joinSocket.disconnect();
+        }
+
+        joinSocket = io();
+
+        joinSocket.on('connect', () => {
+            joinSocket.emit('join_table', {
+                table_number: selectedTable,
+                session_id: sessionId
+            });
+        });
+
+        joinSocket.on('join_success', (data) => {
+            localStorage.setItem('shamrockTable', data.table_number);
+            joinSocket.disconnect();
+            window.location.href = '/tables';
+        });
+
+        joinSocket.on('join_error', (data) => {
+            const errorEl = document.getElementById('error-message');
+            errorEl.textContent = data.message;
+            errorEl.classList.remove('hidden');
+            setTimeout(() => errorEl.classList.add('hidden'), 3000);
+            joinBtn.disabled = false;
+            joinBtn.textContent = 'Join Table';
+            joinSocket.disconnect();
+            joinSocket = null;
+        });
+
+        joinSocket.on('connect_error', () => {
+            joinBtn.disabled = false;
+            joinBtn.textContent = 'Join Table';
+            const errorEl = document.getElementById('error-message');
+            errorEl.textContent = 'Connection failed. Please try again.';
+            errorEl.classList.remove('hidden');
+            setTimeout(() => errorEl.classList.add('hidden'), 3000);
+        });
+    });
+</script>
+{% endblock %}

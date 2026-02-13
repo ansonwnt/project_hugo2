@@ -1,0 +1,620 @@
+/* ============== Admin Login ============== */
+.admin-login-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+.admin-login-card {
+    width: 100%;
+    max-width: 320px;
+    text-align: center;
+}
+
+.admin-login-logo {
+    font-size: 48px;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 4px;
+}
+
+.admin-login-subtitle {
+    color: var(--text-secondary);
+    font-size: 16px;
+    margin-bottom: 32px;
+}
+
+.admin-login-card form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.admin-error {
+    background-color: var(--error);
+    color: white;
+    padding: 10px 16px;
+    border-radius: var(--border-radius-sm);
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 16px;
+}
+
+/* ============== Admin Layout ============== */
+.admin-page {
+    min-height: 100vh;
+    background-color: var(--bg-primary);
+}
+
+.admin-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    background-color: var(--bg-secondary);
+    border-bottom: 1px solid var(--bg-tertiary);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.admin-header h1 {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--accent);
+}
+
+.admin-header h1 span {
+    color: var(--text-secondary);
+    font-weight: 400;
+    font-size: 16px;
+}
+
+.admin-nav {
+    display: flex;
+    gap: 8px;
+}
+
+.admin-nav a {
+    padding: 8px 16px;
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.admin-nav a:hover {
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
+.admin-nav a.active {
+    background-color: var(--accent);
+    color: var(--bg-primary);
+}
+
+.admin-content {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 24px;
+}
+
+/* ============== Stats Cards ============== */
+.admin-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-bottom: 32px;
+}
+
+@media (min-width: 600px) {
+    .admin-stats {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+.stat-card {
+    background-color: var(--bg-secondary);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    text-align: center;
+}
+
+.stat-value {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 6px;
+}
+
+.stat-label {
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* ============== Sections ============== */
+.admin-section {
+    margin-bottom: 32px;
+}
+
+.admin-section h2 {
+    font-size: 18px;
+    margin-bottom: 16px;
+    color: var(--text-primary);
+}
+
+.admin-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.admin-section-header h2 {
+    margin-bottom: 0;
+}
+
+/* ============== Admin Tables Grid ============== */
+.admin-table-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+@media (min-width: 600px) {
+    .admin-table-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+.admin-table-card {
+    background-color: var(--bg-secondary);
+    border-radius: var(--border-radius);
+    padding: 16px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.admin-table-card.occupied {
+    border: 1px solid var(--accent);
+}
+
+.admin-table-card.empty {
+    border: 1px solid var(--bg-tertiary);
+    opacity: 0.5;
+}
+
+.admin-table-number {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--accent);
+}
+
+.admin-table-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.admin-table-photo {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--accent);
+}
+
+.admin-table-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.admin-table-empty {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.btn-kick {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: none;
+    background-color: var(--error);
+    color: white;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+}
+
+.btn-kick:hover {
+    opacity: 1;
+}
+
+/* ============== Danger Button ============== */
+.btn-danger {
+    background-color: var(--error);
+    color: white;
+    border: none;
+}
+
+.btn-danger:hover {
+    background-color: #DC2626;
+}
+
+/* ============== Admin Forms ============== */
+.admin-input {
+    width: 100%;
+    padding: 12px 16px;
+    background-color: var(--bg-secondary);
+    border: 2px solid var(--bg-tertiary);
+    border-radius: var(--border-radius-sm);
+    color: var(--text-primary);
+    font-size: 15px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+.admin-input:focus {
+    border-color: var(--accent);
+}
+
+.admin-input::placeholder {
+    color: var(--text-secondary);
+}
+
+.admin-input-sm {
+    max-width: 140px;
+}
+
+.admin-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.admin-form-row {
+    display: flex;
+    gap: 12px;
+}
+
+.admin-form-row .admin-input {
+    flex: 1;
+}
+
+/* ============== Menu Items List ============== */
+.admin-cat-title {
+    color: var(--text-primary);
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--accent);
+    display: inline-block;
+}
+
+.admin-cat-count {
+    color: var(--text-secondary);
+    font-weight: 400;
+    font-size: 14px;
+}
+
+.admin-items-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.admin-item-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background-color: var(--bg-secondary);
+    border-radius: var(--border-radius-sm);
+    flex-wrap: wrap;
+}
+
+.admin-item-preview {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    overflow: hidden;
+    flex-shrink: 0;
+    background-color: var(--bg-tertiary);
+}
+
+.admin-item-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.admin-item-no-img {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    font-size: 18px;
+}
+
+.admin-item-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.admin-item-name {
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.admin-item-price {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--accent);
+}
+
+.admin-item-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.btn-edit, .btn-delete {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-edit {
+    background-color: var(--bg-tertiary);
+    color: var(--text-secondary);
+}
+
+.btn-edit:hover {
+    background-color: var(--info);
+    color: white;
+}
+
+.btn-delete {
+    background-color: var(--bg-tertiary);
+    color: var(--text-secondary);
+}
+
+.btn-delete:hover {
+    background-color: var(--error);
+    color: white;
+}
+
+/* Inline edit form */
+.admin-edit-form {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding-top: 12px;
+    border-top: 1px solid var(--bg-tertiary);
+    margin-top: 4px;
+}
+
+.admin-edit-form .admin-input {
+    flex: 1;
+    min-width: 120px;
+}
+
+.admin-edit-form .admin-input-sm {
+    flex: 0 0 auto;
+    max-width: 120px;
+}
+
+/* ============== Broadcast Form ============== */
+.admin-broadcast-form {
+    display: flex;
+    gap: 12px;
+}
+
+.admin-broadcast-form .admin-input {
+    flex: 1;
+}
+
+.admin-broadcast-form .btn {
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+/* ============== Section Actions (table count + reset) ============== */
+.admin-section-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.table-count-form {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.table-count-form label {
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.admin-input-xs {
+    width: 60px !important;
+    padding: 8px 10px;
+    text-align: center;
+    font-size: 14px;
+}
+
+.btn-secondary {
+    background-color: var(--bg-tertiary);
+    color: var(--text-secondary);
+    border: none;
+}
+
+.btn-secondary:hover {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+/* ============== Two Column Layout ============== */
+.admin-two-col {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+}
+
+@media (min-width: 700px) {
+    .admin-two-col {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+/* ============== Drink Stats ============== */
+.drink-stats-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.drink-stat-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background-color: var(--bg-secondary);
+    border-radius: var(--border-radius-sm);
+}
+
+.drink-stat-rank {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background-color: var(--bg-tertiary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+    flex-shrink: 0;
+}
+
+.drink-stat-row:first-child .drink-stat-rank {
+    background-color: var(--accent);
+    color: var(--bg-primary);
+}
+
+.drink-stat-name {
+    flex: 1;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.drink-stat-count {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--accent);
+}
+
+/* ============== Activity Feed ============== */
+.activity-feed {
+    max-height: 400px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.activity-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background-color: var(--bg-secondary);
+    border-radius: var(--border-radius-sm);
+    font-size: 13px;
+}
+
+.activity-icon {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+    color: white;
+}
+
+.activity-join .activity-icon { background-color: #22C55E; }
+.activity-leave .activity-icon { background-color: #EF4444; }
+.activity-drink .activity-icon { background-color: var(--accent); }
+.activity-game .activity-icon { background-color: #8B5CF6; }
+.activity-broadcast .activity-icon { background-color: #3B82F6; }
+.activity-message .activity-icon { background-color: #6B7280; }
+
+.activity-text {
+    flex: 1;
+    color: var(--text-primary);
+    line-height: 1.3;
+}
+
+.activity-time {
+    font-size: 12px;
+    color: var(--text-secondary);
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ============== Empty State ============== */
+.admin-empty-state {
+    color: var(--text-secondary);
+    font-size: 14px;
+    text-align: center;
+    padding: 24px 16px;
+    background-color: var(--bg-secondary);
+    border-radius: var(--border-radius-sm);
+}
+
+/* ============== Admin Member ============== */
+.admin-member {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
