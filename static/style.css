@@ -98,29 +98,33 @@ body {
 
 /* ============== Landing Page ============== */
 .landing-page {
-    min-height: 100vh;
+    height: 100dvh;
+    height: 100vh; /* fallback */
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
     padding: 24px;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    overflow: hidden;
 }
 
 .landing-header {
     text-align: center;
-    margin-bottom: 48px;
+    margin-bottom: 24px;
+    flex-shrink: 0;
+    padding-top: max(12px, env(safe-area-inset-top, 0px));
 }
 
 .logo {
-    font-size: 48px;
+    font-size: 40px;
     font-weight: 700;
     color: var(--accent);
-    margin-bottom: 8px;
+    margin-bottom: 4px;
 }
 
 .tagline {
     color: var(--text-secondary);
-    font-size: 18px;
+    font-size: 16px;
 }
 
 /* ============== Profile Step ============== */
@@ -128,6 +132,18 @@ body {
     width: 100%;
     max-width: 320px;
     text-align: center;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.profile-step .profile-bottom {
+    margin-top: auto;
+    padding-top: 16px;
+    flex-shrink: 0;
 }
 
 .profile-step h2 {
@@ -168,6 +184,11 @@ body {
     display: inline-block;
 }
 
+.photo-preview-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
 .photo-preview {
     width: 96px;
     height: 96px;
@@ -182,6 +203,7 @@ body {
     margin: 0 auto;
     overflow: hidden;
     transition: border-color 0.2s ease;
+    cursor: pointer;
 }
 
 .photo-preview:hover {
@@ -205,31 +227,41 @@ body {
     font-weight: 500;
 }
 
-.photo-choice-buttons {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-    margin-top: 12px;
+.photo-menu {
+    position: absolute;
+    top: 104px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--bg-secondary);
+    border: 1px solid var(--bg-tertiary);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    z-index: 10;
+    box-shadow: var(--shadow);
+    min-width: 200px;
 }
 
-.photo-choice-btn {
+.photo-menu-btn {
     display: flex;
     align-items: center;
-    gap: 6px;
-    padding: 10px 16px;
-    border-radius: 10px;
-    border: 1px solid var(--bg-tertiary);
-    background: var(--bg-secondary);
+    gap: 10px;
+    width: 100%;
+    padding: 14px 16px;
+    border: none;
+    background: none;
     color: var(--text-primary);
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 500;
     cursor: pointer;
-    transition: background 0.2s, border-color 0.2s;
+    font-family: inherit;
 }
 
-.photo-choice-btn:active {
+.photo-menu-btn:hover {
     background: var(--bg-tertiary);
-    border-color: var(--accent);
+}
+
+.photo-menu-btn + .photo-menu-btn {
+    border-top: 1px solid var(--bg-tertiary);
 }
 
 /* Color Picker */
@@ -370,6 +402,12 @@ body {
     color: var(--accent);
 }
 
+.profile-validation {
+    font-size: 14px;
+    color: var(--error);
+    margin-bottom: 10px;
+}
+
 .privacy-notice {
     margin-top: 16px;
     font-size: 14px;
@@ -414,9 +452,10 @@ body {
 /* ============== Onboarding ============== */
 .onboarding-step {
     max-width: 320px;
+    width: 100%;
     margin: 0 auto;
-    height: 100dvh;
-    height: 100vh; /* fallback */
+    flex: 1;
+    min-height: 0;
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -691,6 +730,100 @@ body {
 .tables-page {
     min-height: 100vh;
     padding-bottom: 80px;
+}
+
+/* ============== People Page ============== */
+.people-page {
+    min-height: 100vh;
+    padding-bottom: 20px;
+}
+
+.people-grid-container {
+    padding: 20px;
+}
+
+.people-grid-container h2 {
+    font-size: 16px;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+    text-align: center;
+}
+
+.people-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.person-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 8px;
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 2px solid transparent;
+}
+
+.person-card:hover {
+    background: var(--bg-tertiary);
+    border-color: var(--accent);
+    transform: translateY(-2px);
+}
+
+.person-card:active {
+    transform: scale(0.95);
+}
+
+.person-avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--bg-tertiary);
+}
+
+.person-avatar-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--accent);
+    color: white;
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.person-avatar.frame-red { border-color: #EF4444; }
+.person-avatar.frame-yellow { border-color: #EAB308; }
+.person-avatar.frame-green { border-color: #22C55E; }
+
+.person-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    text-align: center;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.your-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+@media (min-width: 480px) {
+    .people-grid {
+        grid-template-columns: repeat(4, 1fr);
+        max-width: 500px;
+    }
 }
 
 .table-grid-container {

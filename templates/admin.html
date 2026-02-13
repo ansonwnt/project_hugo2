@@ -22,8 +22,8 @@
             <!-- Stats Cards -->
             <div class="admin-stats">
                 <div class="stat-card">
-                    <div class="stat-value">{{ occupied }}/{{ total_tables }}</div>
-                    <div class="stat-label">Tables Occupied</div>
+                    <div class="stat-value">{{ online_count }}</div>
+                    <div class="stat-label">Users Online</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-value">{{ connected }}</div>
@@ -43,49 +43,41 @@
             <div class="admin-section">
                 <h2>Broadcast Message</h2>
                 <form method="POST" action="{{ url_for('admin_broadcast') }}" class="admin-broadcast-form">
-                    <input type="text" name="message" class="admin-input" placeholder="Type a message to all tables..." maxlength="200" required>
+                    <input type="text" name="message" class="admin-input" placeholder="Type a message to all users..." maxlength="200" required>
                     <button type="submit" class="btn btn-primary">Send to All</button>
                 </form>
             </div>
 
-            <!-- Tables Overview -->
+            <!-- Users Overview -->
             <div class="admin-section">
                 <div class="admin-section-header">
-                    <h2>Tables</h2>
+                    <h2>Online Users</h2>
                     <div class="admin-section-actions">
-                        <form method="POST" action="{{ url_for('admin_settings_tables') }}" class="table-count-form">
-                            <label>Count:</label>
-                            <input type="number" name="table_count" value="{{ table_count }}" min="1" max="50" class="admin-input admin-input-xs">
-                            <button type="submit" class="btn btn-small btn-secondary">Update</button>
-                        </form>
-                        <form method="POST" action="{{ url_for('admin_tables_reset') }}" onsubmit="return confirm('Reset ALL tables? This will kick everyone.')">
+                        <form method="POST" action="{{ url_for('admin_users_reset') }}" onsubmit="return confirm('Reset ALL users? This will kick everyone offline.')">
                             <button type="submit" class="btn btn-small btn-danger">Reset All</button>
                         </form>
                     </div>
                 </div>
                 <div class="admin-table-grid">
-                    {% for t in tables %}
-                    <div class="admin-table-card {{ 'occupied' if t.is_occupied else 'empty' }}">
-                        <div class="admin-table-number">{{ t.table_number }}</div>
-                        {% if t.is_occupied %}
+                    {% for u in users %}
+                    <div class="admin-table-card occupied">
                         <div class="admin-table-info">
-                            {% for m in t.members %}
                             <div class="admin-member">
-                                {% if m.photo_url %}
-                                <img src="{{ m.photo_url }}" class="admin-table-photo" alt="">
+                                {% if u.photo_url %}
+                                <img src="{{ u.photo_url }}" class="admin-table-photo" alt="">
                                 {% endif %}
-                                <span class="admin-table-name">{{ m.name }}</span>
+                                <span class="admin-table-name">{{ u.name }}</span>
                             </div>
-                            {% endfor %}
                         </div>
-                        <form method="POST" action="{{ url_for('admin_kick_table', table_number=t.table_number) }}" onsubmit="return confirm('Kick all members from table {{ t.table_number }}?')">
-                            <button type="submit" class="btn-kick" title="Kick All">x</button>
+                        <form method="POST" action="{{ url_for('admin_kick_user', session_id=u.session_id) }}" onsubmit="return confirm('Kick {{ u.name }}?')">
+                            <button type="submit" class="btn-kick" title="Kick">x</button>
                         </form>
-                        {% else %}
+                    </div>
+                    {% else %}
+                    <div class="admin-table-card empty">
                         <div class="admin-table-info">
-                            <span class="admin-table-empty">Empty</span>
+                            <span class="admin-table-empty">No users online</span>
                         </div>
-                        {% endif %}
                     </div>
                     {% endfor %}
                 </div>

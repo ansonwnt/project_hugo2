@@ -13,7 +13,7 @@ def get_db():
     return conn
 
 def init_db():
-    """Initialize the database with tables."""
+    """Initialize the database."""
     conn = get_db()
     cursor = conn.cursor()
 
@@ -25,58 +25,23 @@ def init_db():
         )
     ''')
 
-    # Tables table - tracks which tables exist
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS tables (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            table_number INTEGER UNIQUE NOT NULL,
-            is_occupied BOOLEAN DEFAULT 0,
-            session_id TEXT,
-            last_active TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    ''')
-
     # Activity log
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS activity_log (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             event_type TEXT NOT NULL,
             description TEXT NOT NULL,
-            table_number INTEGER,
+            session_id TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
 
-    # Get configured table count (default 12)
-    cursor.execute("SELECT value FROM settings WHERE key = 'table_count'")
-    row = cursor.fetchone()
-    table_count = int(row['value']) if row else 12
-    if not row:
-        cursor.execute("INSERT OR IGNORE INTO settings (key, value) VALUES ('table_count', '12')")
-
-    # Initialize tables up to configured count
-    for i in range(1, table_count + 1):
-        cursor.execute('''
-            INSERT OR IGNORE INTO tables (table_number, is_occupied)
-            VALUES (?, 0)
-        ''', (i,))
-
-    # Table members - tracks who is at each table (multiple people per table)
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS table_members (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            table_number INTEGER NOT NULL,
-            session_id TEXT UNIQUE NOT NULL,
-            joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    ''')
-
-    # Messages table - stores messages and drink offers
+    # Messages table - stores messages and drink offers (user-to-user)
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS messages (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            from_table INTEGER NOT NULL,
-            to_table INTEGER NOT NULL,
+            from_session TEXT NOT NULL,
+            to_session TEXT NOT NULL,
             message_type TEXT NOT NULL,
             content TEXT NOT NULL,
             status TEXT DEFAULT 'pending',
@@ -84,7 +49,7 @@ def init_db():
         )
     ''')
 
-    # Profiles table - user profiles with name and photo
+    # Profiles table - user profiles with name, photo, and online status
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS profiles (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -92,127 +57,88 @@ def init_db():
             name TEXT NOT NULL,
             photo_url TEXT,
             color_frame TEXT,
+            is_online BOOLEAN DEFAULT 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
 
-    # Add color_frame column if missing (existing DBs)
+    # Add columns if missing (existing DBs)
     try:
         cursor.execute('ALTER TABLE profiles ADD COLUMN color_frame TEXT')
     except sqlite3.OperationalError:
-        pass  # column already exists
-
-    # Reset all tables on startup (in-memory state is fresh)
-    cursor.execute('UPDATE tables SET is_occupied = 0, session_id = NULL')
-    cursor.execute('DELETE FROM table_members')
-
-    conn.commit()
-    conn.close()
-
-def get_all_tables():
-    """Get status of all tables with member profiles."""
-    conn = get_db()
-    cursor = conn.cursor()
-    cursor.execute('SELECT table_number FROM tables ORDER BY table_number')
-    tables = []
-    for row in cursor.fetchall():
-        tn = row['table_number']
-        cursor.execute('''
-            SELECT p.name, p.photo_url, p.color_frame, tm.session_id
-            FROM table_members tm
-            JOIN profiles p ON p.session_id = tm.session_id
-            WHERE tm.table_number = ?
-            ORDER BY tm.joined_at
-        ''', (tn,))
-        members = [{'name': m['name'], 'photo_url': m['photo_url'], 'color_frame': m['color_frame'], 'session_id': m['session_id']} for m in cursor.fetchall()]
-        tables.append({
-            'table_number': tn,
-            'is_occupied': len(members) > 0,
-            'members': members,
-            'profile_name': members[0]['name'] if members else None,
-            'profile_photo': members[0]['photo_url'] if members else None,
-            'color_frame': members[0]['color_frame'] if members else None,
-        })
-    conn.close()
-    return tables
-
-def occupy_table(table_number, session_id):
-    """Add a session to a table. Multiple people can join the same table."""
-    conn = get_db()
-    cursor = conn.cursor()
+        pass
     try:
-        # Remove from any previous table first
-        cursor.execute('DELETE FROM table_members WHERE session_id = ?', (session_id,))
-        # Insert into new table
-        cursor.execute(
-            'INSERT INTO table_members (table_number, session_id) VALUES (?, ?)',
-            (table_number, session_id)
-        )
-        # Update legacy tables row
-        cursor.execute(
-            'UPDATE tables SET is_occupied = 1, last_active = CURRENT_TIMESTAMP WHERE table_number = ?',
-            (table_number,)
-        )
-        conn.commit()
-        return True
-    except sqlite3.IntegrityError:
-        conn.rollback()
-        return False
-    finally:
-        conn.close()
+        cursor.execute('ALTER TABLE profiles ADD COLUMN is_online BOOLEAN DEFAULT 0')
+    except sqlite3.OperationalError:
+        pass
 
-def vacate_table(table_number):
-    """Remove ALL members from a table."""
-    conn = get_db()
-    cursor = conn.cursor()
-    cursor.execute('DELETE FROM table_members WHERE table_number = ?', (table_number,))
-    cursor.execute(
-        'UPDATE tables SET is_occupied = 0, session_id = NULL WHERE table_number = ?',
-        (table_number,)
-    )
+    # Reset all users to offline on startup (in-memory state is fresh)
+    cursor.execute('UPDATE profiles SET is_online = 0')
+
     conn.commit()
     conn.close()
 
-def vacate_table_by_session(session_id):
-    """Remove one member from their table. Returns table_number or None."""
+
+# ============== User Online Status ==============
+
+def go_online(session_id: str):
+    """Mark a user as online."""
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute('SELECT table_number FROM table_members WHERE session_id = ?', (session_id,))
+    cursor.execute('UPDATE profiles SET is_online = 1 WHERE session_id = ?', (session_id,))
+    conn.commit()
+    conn.close()
+
+def go_offline(session_id: str):
+    """Mark a user as offline."""
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('UPDATE profiles SET is_online = 0 WHERE session_id = ?', (session_id,))
+    conn.commit()
+    conn.close()
+
+def get_active_users(exclude_session: str = None) -> list:
+    """Get all online users with their profiles."""
+    conn = get_db()
+    cursor = conn.cursor()
+    if exclude_session:
+        cursor.execute('''
+            SELECT session_id, name, photo_url, color_frame
+            FROM profiles
+            WHERE is_online = 1 AND session_id != ?
+            ORDER BY created_at
+        ''', (exclude_session,))
+    else:
+        cursor.execute('''
+            SELECT session_id, name, photo_url, color_frame
+            FROM profiles
+            WHERE is_online = 1
+            ORDER BY created_at
+        ''')
+    users = [dict(row) for row in cursor.fetchall()]
+    conn.close()
+    return users
+
+def is_user_online(session_id: str) -> bool:
+    """Check if a user is online."""
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('SELECT is_online FROM profiles WHERE session_id = ?', (session_id,))
     row = cursor.fetchone()
-    if not row:
-        conn.close()
-        return None
-    table_number = row['table_number']
-    cursor.execute('DELETE FROM table_members WHERE session_id = ?', (session_id,))
-    # Check if table is now empty
-    cursor.execute('SELECT COUNT(*) as cnt FROM table_members WHERE table_number = ?', (table_number,))
-    remaining = cursor.fetchone()['cnt']
-    if remaining == 0:
-        cursor.execute(
-            'UPDATE tables SET is_occupied = 0, session_id = NULL WHERE table_number = ?',
-            (table_number,)
-        )
-    conn.commit()
     conn.close()
-    return table_number
+    return bool(row and row['is_online'])
 
-def is_table_occupied(table_number):
-    """Check if a table has any members."""
-    conn = get_db()
-    cursor = conn.cursor()
-    cursor.execute('SELECT COUNT(*) as cnt FROM table_members WHERE table_number = ?', (table_number,))
-    count = cursor.fetchone()['cnt']
-    conn.close()
-    return count > 0
 
-def create_message(from_table, to_table, message_type, content):
+# ============== Messages ==============
+
+def create_message(from_session, to_session, message_type, content):
     """Create a new message or drink offer."""
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute('''
-        INSERT INTO messages (from_table, to_table, message_type, content, status)
+        INSERT INTO messages (from_session, to_session, message_type, content, status)
         VALUES (?, ?, ?, ?, 'pending')
-    ''', (from_table, to_table, message_type, content))
+    ''', (from_session, to_session, message_type, content))
     message_id = cursor.lastrowid
     conn.commit()
     conn.close()
@@ -235,38 +161,25 @@ def get_message(message_id):
     conn.close()
     return dict(row) if row else None
 
+
+# ============== Profiles ==============
+
 def create_profile(session_id: str, name: str, photo_url: str = None, color_frame: str = None):
     """Create or update a user profile."""
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute('''
-        INSERT OR REPLACE INTO profiles (session_id, name, photo_url, color_frame)
-        VALUES (?, ?, ?, ?)
+        INSERT OR REPLACE INTO profiles (session_id, name, photo_url, color_frame, is_online)
+        VALUES (?, ?, ?, ?, 0)
     ''', (session_id, name, photo_url, color_frame))
     conn.commit()
     conn.close()
 
-def get_profile(session_id: str) -> dict | None:
+def get_profile(session_id: str):
     """Get a profile by session ID."""
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute('SELECT session_id, name, photo_url, color_frame FROM profiles WHERE session_id = ?', (session_id,))
-    row = cursor.fetchone()
-    conn.close()
-    return dict(row) if row else None
-
-def get_profile_by_table(table_number: int) -> dict | None:
-    """Get the profile of the first member at a given table."""
-    conn = get_db()
-    cursor = conn.cursor()
-    cursor.execute('''
-        SELECT p.name, p.photo_url, p.color_frame
-        FROM profiles p
-        JOIN table_members tm ON tm.session_id = p.session_id
-        WHERE tm.table_number = ?
-        ORDER BY tm.joined_at
-        LIMIT 1
-    ''', (table_number,))
     row = cursor.fetchone()
     conn.close()
     return dict(row) if row else None
@@ -299,7 +212,7 @@ def init_menu_table():
     conn.commit()
     conn.close()
 
-def get_all_menu_items() -> list[dict]:
+def get_all_menu_items() -> list:
     """Get all menu items ordered by category then sort_order."""
     conn = get_db()
     cursor = conn.cursor()
@@ -343,7 +256,7 @@ def delete_menu_item(item_id: int):
     conn.commit()
     conn.close()
 
-def seed_menu_items(drinks: list[dict]):
+def seed_menu_items(drinks: list):
     """Seed menu_items from the hardcoded DRINKS list (only if table is empty)."""
     if get_menu_items_count() > 0:
         return
@@ -386,34 +299,20 @@ def set_setting(key: str, value: str):
     conn.commit()
     conn.close()
 
-def sync_table_count(new_count: int):
-    """Ensure the tables table has exactly new_count rows."""
-    conn = get_db()
-    cursor = conn.cursor()
-    # Add any missing tables
-    for i in range(1, new_count + 1):
-        cursor.execute('INSERT OR IGNORE INTO tables (table_number, is_occupied) VALUES (?, 0)', (i,))
-    # Remove tables beyond the new count (only if unoccupied)
-    cursor.execute('DELETE FROM tables WHERE table_number > ? AND is_occupied = 0', (new_count,))
-    # Update setting in same connection
-    cursor.execute("INSERT OR REPLACE INTO settings (key, value) VALUES ('table_count', ?)", (str(new_count),))
-    conn.commit()
-    conn.close()
-
 
 # ============== Activity Log ==============
 
-def log_activity(event_type: str, description: str, table_number: int = None):
+def log_activity(event_type: str, description: str, session_id: str = None):
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute(
-        'INSERT INTO activity_log (event_type, description, table_number) VALUES (?, ?, ?)',
-        (event_type, description, table_number)
+        'INSERT INTO activity_log (event_type, description, session_id) VALUES (?, ?, ?)',
+        (event_type, description, session_id)
     )
     conn.commit()
     conn.close()
 
-def get_recent_activity(limit: int = 50) -> list[dict]:
+def get_recent_activity(limit: int = 50) -> list:
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute('SELECT * FROM activity_log ORDER BY created_at DESC LIMIT ?', (limit,))
@@ -431,7 +330,7 @@ def clear_activity_log():
 
 # ============== Drink Stats ==============
 
-def get_drink_stats(limit: int = 10) -> list[dict]:
+def get_drink_stats(limit: int = 10) -> list:
     """Get top drinks by number of times sent."""
     conn = get_db()
     cursor = conn.cursor()

@@ -36,12 +36,12 @@ self.addEventListener('notificationclick', (event) => {
         clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
             // Focus existing window or open new one
             for (const client of clientList) {
-                if (client.url.includes('/tables') && 'focus' in client) {
+                if (client.url.includes('/people') && 'focus' in client) {
                     return client.focus();
                 }
             }
             if (clients.openWindow) {
-                return clients.openWindow('/tables');
+                return clients.openWindow('/people');
             }
         })
     );
