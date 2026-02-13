@@ -594,6 +594,11 @@
     let activePhotoInput = null; // tracks which input has the selected file
     let selectedColor = null;
 
+    // Tapping the photo preview circle opens album picker
+    photoPreview.addEventListener('click', () => {
+        photoAlbumInput.click();
+    });
+
     // Camera button
     document.getElementById('photo-camera-btn').addEventListener('click', () => {
         photoCameraInput.click();
