@@ -1,4 +1,4 @@
-// Shamrock App - Shared utilities
+// pak.yourbro App - Shared utilities
 // Most page-specific logic is in the templates
 
-console.log('Shamrock App loaded');
+console.log('pak.yourbro App loaded');

@@ -19,12 +19,12 @@ from datetime import datetime, timedelta
 import threading
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'shamrock-secret-key-change-in-production')
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'pakyb-secret-key-change-in-production')
 app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # 5MB max upload
 
 UPLOAD_FOLDER = os.path.join(app.static_folder, 'uploads')
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
-ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'shamrock2024')
+ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'pakyb2024')
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -77,7 +77,7 @@ _initial_cleanup.start()
 models.init_db()
 models.init_menu_table()
 
-# Menu data - The Shamrock Irish Bar, Warsaw (single source of truth)
+# Menu data (single source of truth)
 _U = 'https://images.unsplash.com'
 
 DRINKS = [
@@ -645,6 +645,7 @@ def handle_rps_challenge(data):
         'choice_b': None,
         'timer': None,
         'started': False,
+        'created_at': time.time(),
     }
 
     profile = models.get_profile(sender_session)
@@ -799,6 +800,7 @@ def handle_bomb_challenge(data):
         'started': False,
         'timer': None,
         'last_pass_time': 0,
+        'created_at': time.time(),
     }
 
     profile = models.get_profile(sender_session)
@@ -969,6 +971,7 @@ def handle_tap_challenge(data):
         'timer': None,
         'last_tap_a': 0,
         'last_tap_b': 0,
+        'created_at': time.time(),
     }
 
     profile = models.get_profile(sender_session)
@@ -1183,6 +1186,7 @@ def handle_ttol_challenge(data):
         'lie_index_b': None,
         'guess_a': None,
         'guess_b': None,
+        'created_at': time.time(),
     }
 
     profile = models.get_profile(sender_session)

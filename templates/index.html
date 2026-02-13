@@ -5,7 +5,7 @@
 {% block content %}
 <div class="landing-page">
     <div class="landing-header">
-        <h1 class="logo">Shamrock</h1>
+        <h1 class="logo">pak.yourbro</h1>
         <p class="tagline">Connect with people around you</p>
     </div>
 
@@ -38,7 +38,7 @@
                     <circle cx="30" cy="34" r="3" fill="currentColor"/>
                     <circle cx="50" cy="34" r="3" fill="currentColor"/>
                 </svg>
-                <h2>Welcome to Shamrock</h2>
+                <h2>Welcome to pak.yourbro</h2>
                 <p>The social app for this venue. See who else is here tonight, buy them a drink straight from the menu, or challenge them to a quick game.</p>
             </div>
             <!-- Slide 2: How it works -->
@@ -193,7 +193,7 @@
     let deferredPrompt = null;
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
 
-    if (!isStandalone && !localStorage.getItem('shamrockDismissInstall')) {
+    if (!isStandalone && !localStorage.getItem('pakybDismissInstall')) {
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
         const banner = document.getElementById('install-banner');
 
@@ -222,7 +222,7 @@
 
         document.getElementById('install-dismiss').addEventListener('click', () => {
             banner.classList.add('hidden');
-            localStorage.setItem('shamrockDismissInstall', '1');
+            localStorage.setItem('pakybDismissInstall', '1');
         });
     }
 
@@ -245,7 +245,7 @@
         }
 
         function finishOnboarding() {
-            localStorage.setItem('shamrockOnboarded', '1');
+            localStorage.setItem('pakybOnboarded', '1');
             document.getElementById('onboarding-step').classList.add('hidden');
             document.getElementById('profile-step').classList.remove('hidden');
         }
@@ -349,7 +349,7 @@
                         // Show a test notification
                         if (navigator.serviceWorker && navigator.serviceWorker.controller) {
                             navigator.serviceWorker.ready.then(function(reg) {
-                                reg.showNotification('Shamrock', { body: 'Notifications enabled! You won\'t miss a thing.', icon: '/static/icon-192.png' });
+                                reg.showNotification('pak.yourbro', { body: 'Notifications enabled! You won\'t miss a thing.', icon: '/static/icon-192.png' });
                             });
                         }
                     } else if (perm === 'denied') {
@@ -377,8 +377,8 @@
     })();
 
     // ===== Flow control =====
-    const existingSession = localStorage.getItem('shamrockSession');
-    const hasOnboarded = localStorage.getItem('shamrockOnboarded');
+    const existingSession = localStorage.getItem('pakybSession');
+    const hasOnboarded = localStorage.getItem('pakybOnboarded');
 
     if (existingSession) {
         // Already has a session — go straight to people page
@@ -508,13 +508,13 @@
             const res = await fetch('/api/profile', { method: 'POST', body: formData });
             const data = await res.json();
             if (data.success) {
-                localStorage.setItem('shamrockSession', sessionId);
-                localStorage.setItem('shamrockProfileName', name);
+                localStorage.setItem('pakybSession', sessionId);
+                localStorage.setItem('pakybProfileName', name);
                 if (data.photo_url) {
-                    localStorage.setItem('shamrockProfilePhoto', data.photo_url);
+                    localStorage.setItem('pakybProfilePhoto', data.photo_url);
                 }
                 if (data.color_frame) {
-                    localStorage.setItem('shamrockColorFrame', data.color_frame);
+                    localStorage.setItem('pakybColorFrame', data.color_frame);
                 }
                 window.location.href = '/people';
             } else {

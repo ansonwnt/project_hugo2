@@ -416,6 +416,17 @@
         </div>
     </div>
 
+    <!-- Challenge Waiting Modal -->
+    <div id="challenge-waiting-modal" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content incoming-notification">
+            <div class="rps-waiting-icon" style="font-size: 2.5rem; margin-bottom: 0.5rem;">⏳</div>
+            <p id="challenge-waiting-message" style="font-size: 1.1rem; font-weight: 600;">Waiting for response...</p>
+            <p id="challenge-waiting-detail" style="color: #888; font-size: 0.9rem; margin-top: 0.25rem;">They'll see your challenge now</p>
+            <button id="challenge-waiting-cancel" class="btn btn-secondary" style="margin-top: 1rem;">Cancel</button>
+        </div>
+    </div>
+
     <!-- TTOL Result Screen -->
     <div id="ttol-result-modal" class="modal hidden">
         <div class="modal-backdrop"></div>
@@ -433,12 +444,12 @@
 {% block scripts %}
 <script>
     // Check session
-    const sessionId = localStorage.getItem('shamrockSession');
+    const sessionId = localStorage.getItem('pakybSession');
     if (!sessionId) {
         window.location.href = '/';
     }
 
-    const myName = localStorage.getItem('shamrockProfileName') || 'You';
+    const myName = localStorage.getItem('pakybProfileName') || 'You';
     document.getElementById('my-name').textContent = myName;
 
     let targetSession = null;
@@ -460,7 +471,7 @@
                 document.getElementById('notif-banner').classList.add('hidden');
                 if (perm === 'granted') {
                     navigator.serviceWorker.ready.then(reg => {
-                        reg.showNotification('Shamrock', { body: 'Notifications enabled! 🎉', icon: '/static/icon-192.png' });
+                        reg.showNotification('pak.yourbro', { body: 'Notifications enabled! 🎉', icon: '/static/icon-192.png' });
                     });
                 }
             });
@@ -524,18 +535,18 @@
     });
 
     socket.on('rejoin_failed', () => {
-        localStorage.removeItem('shamrockSession');
-        localStorage.removeItem('shamrockProfileName');
-        localStorage.removeItem('shamrockProfilePhoto');
-        localStorage.removeItem('shamrockColorFrame');
+        localStorage.removeItem('pakybSession');
+        localStorage.removeItem('pakybProfileName');
+        localStorage.removeItem('pakybProfilePhoto');
+        localStorage.removeItem('pakybColorFrame');
         window.location.href = '/';
     });
 
     socket.on('kicked', () => {
-        localStorage.removeItem('shamrockSession');
-        localStorage.removeItem('shamrockProfileName');
-        localStorage.removeItem('shamrockProfilePhoto');
-        localStorage.removeItem('shamrockColorFrame');
+        localStorage.removeItem('pakybSession');
+        localStorage.removeItem('pakybProfileName');
+        localStorage.removeItem('pakybProfilePhoto');
+        localStorage.removeItem('pakybColorFrame');
         window.location.href = '/';
     });
 
@@ -813,12 +824,12 @@
 
     // ===== Checkout =====
     document.getElementById('checkout-btn').addEventListener('click', () => {
-        showConfirm('Leave Shamrock?', () => {
+        showConfirm('Leave pak.yourbro?', () => {
             socket.emit('checkout', { session_id: sessionId });
-            localStorage.removeItem('shamrockSession');
-            localStorage.removeItem('shamrockProfileName');
-            localStorage.removeItem('shamrockProfilePhoto');
-            localStorage.removeItem('shamrockColorFrame');
+            localStorage.removeItem('pakybSession');
+            localStorage.removeItem('pakybProfileName');
+            localStorage.removeItem('pakybProfilePhoto');
+            localStorage.removeItem('pakybColorFrame');
             window.location.href = '/';
         }, 'Check Out', 'Stay');
     });
@@ -860,6 +871,25 @@
         }, 3000);
     }
 
+    // ===== Challenge Waiting Modal =====
+    let challengeWaitingGameType = null;
+
+    function showChallengeWaiting(targetName, gameLabel) {
+        document.getElementById('challenge-waiting-message').textContent =
+            `Waiting for ${targetName}...`;
+        document.getElementById('challenge-waiting-detail').textContent =
+            `${gameLabel} challenge sent`;
+        document.getElementById('challenge-waiting-modal').classList.remove('hidden');
+        challengeWaitingGameType = gameLabel;
+    }
+
+    function hideChallengeWaiting() {
+        document.getElementById('challenge-waiting-modal').classList.add('hidden');
+        challengeWaitingGameType = null;
+    }
+
+    document.getElementById('challenge-waiting-cancel').addEventListener('click', hideChallengeWaiting);
+
     // ===== Rock Paper Scissors =====
     let rpsGameId = null;
     let rpsOpponentSession = null;
@@ -883,13 +913,14 @@
                 drink: mode === 'drink' ? 'drink' : '',
             });
             closeActionModal();
-            showToast('Challenge sent!', 'info');
+            showChallengeWaiting(userName(targetSession), 'Rock Paper Scissors');
         });
     });
 
     socket.on('rps_error', (data) => showToast(data.message, 'error'));
 
     socket.on('rps_declined', (data) => {
+        hideChallengeWaiting();
         showToast(`${userName(data.from_session)} declined your challenge`, 'info');
     });
 
@@ -926,6 +957,7 @@
 
     socket.on('rps_start', (data) => {
         if (data.session_a !== sessionId && data.session_b !== sessionId) return;
+        hideChallengeWaiting();
         rpsGameId = data.game_id;
         rpsOpponentSession = data.session_a === sessionId ? data.session_b : data.session_a;
 
@@ -1041,13 +1073,14 @@
                 drink: mode === 'drink' ? 'drink' : '',
             });
             closeActionModal();
-            showToast('Bomb Pass challenge sent!', 'info');
+            showChallengeWaiting(userName(targetSession), 'Bomb Pass');
         });
     });
 
     socket.on('bomb_error', (data) => showToast(data.message, 'error'));
 
     socket.on('bomb_declined', (data) => {
+        hideChallengeWaiting();
         showToast(`${userName(data.from_session)} declined your Bomb Pass`, 'info');
     });
 
@@ -1131,6 +1164,7 @@
 
     socket.on('bomb_start', (data) => {
         if (data.session_a !== sessionId && data.session_b !== sessionId) return;
+        hideChallengeWaiting();
         bombGameId = data.game_id;
         bombOpponentSession = data.session_a === sessionId ? data.session_b : data.session_a;
 
@@ -1234,13 +1268,14 @@
                 drink: mode === 'drink' ? 'drink' : '',
             });
             closeActionModal();
-            showToast('Tap Race challenge sent!', 'info');
+            showChallengeWaiting(userName(targetSession), 'Tap Race');
         });
     });
 
     socket.on('tap_error', (data) => showToast(data.message, 'error'));
 
     socket.on('tap_declined', (data) => {
+        hideChallengeWaiting();
         showToast(`${userName(data.from_session)} declined your Tap Race`, 'info');
     });
 
@@ -1277,6 +1312,7 @@
 
     socket.on('tap_start', (data) => {
         if (data.session_a !== sessionId && data.session_b !== sessionId) return;
+        hideChallengeWaiting();
         tapGameId = data.game_id;
         tapOpponentSession = data.session_a === sessionId ? data.session_b : data.session_a;
         tapActive = false;
@@ -1462,13 +1498,14 @@
                 drink: mode === 'drink' ? 'drink' : '',
             });
             closeActionModal();
-            showToast('2 Truths 1 Lie challenge sent!', 'info');
+            showChallengeWaiting(userName(targetSession), '2 Truths 1 Lie');
         });
     });
 
     socket.on('ttol_error', (data) => showToast(data.message, 'error'));
 
     socket.on('ttol_declined', (data) => {
+        hideChallengeWaiting();
         showToast(`${userName(data.from_session)} declined your 2 Truths 1 Lie`, 'info');
     });
 

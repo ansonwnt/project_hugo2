@@ -1,7 +1,7 @@
-// Service Worker for Shamrock PWA
+// Service Worker for pak.yourbro PWA
 // Required for iOS notifications in Add-to-Home-Screen mode
 
-const CACHE_NAME = 'shamrock-v1';
+const CACHE_NAME = 'pakyb-v1';
 
 // Install — cache essential assets
 self.addEventListener('install', (event) => {
@@ -21,7 +21,7 @@ self.addEventListener('fetch', (event) => {
 // Handle push events (for future server push support)
 self.addEventListener('push', (event) => {
     const data = event.data ? event.data.json() : {};
-    const title = data.title || 'Shamrock';
+    const title = data.title || 'pak.yourbro';
     const options = {
         body: data.body || 'You have a new notification',
         icon: '/static/icon-192.png',
