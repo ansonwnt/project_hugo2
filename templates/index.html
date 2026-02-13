@@ -144,6 +144,7 @@
             </div>
             <input type="file" id="profile-photo-camera" accept="image/*" capture="user" style="display:none;">
             <input type="file" id="profile-photo-album" accept="image/*" style="display:none;">
+            <input type="file" id="profile-photo-generic" accept="image/*" style="display:none;">
         </div>
 
         <div class="color-picker-section">
@@ -590,13 +591,14 @@
     const nextBtn = document.getElementById('profile-next-btn');
     const photoCameraInput = document.getElementById('profile-photo-camera');
     const photoAlbumInput = document.getElementById('profile-photo-album');
+    const photoGenericInput = document.getElementById('profile-photo-generic');
     const photoPreview = document.getElementById('photo-preview');
     let activePhotoInput = null; // tracks which input has the selected file
     let selectedColor = null;
 
-    // Tapping the photo preview circle opens album picker
+    // Tapping the photo preview circle lets user choose camera or album
     photoPreview.addEventListener('click', () => {
-        photoAlbumInput.click();
+        photoGenericInput.click();
     });
 
     // Camera button
@@ -647,6 +649,7 @@
 
     photoCameraInput.addEventListener('change', () => handlePhotoSelected(photoCameraInput));
     photoAlbumInput.addEventListener('change', () => handlePhotoSelected(photoAlbumInput));
+    photoGenericInput.addEventListener('change', () => handlePhotoSelected(photoGenericInput));
 
     // Submit profile and move to table selection
     nextBtn.addEventListener('click', async () => {
