@@ -49,22 +49,34 @@
                     <span class="buy-drink-icon">🍺</span>
                     <span>Buy a Drink</span>
                 </button>
-                <button id="rps-btn" class="rps-btn">
-                    <span class="rps-btn-icon">✊</span>
-                    <span>Rock Paper Scissors</span>
-                </button>
-                <button id="bomb-btn" class="bomb-btn">
-                    <span class="bomb-btn-icon">💣</span>
-                    <span>Bomb Pass</span>
-                </button>
-                <button id="tap-btn" class="tap-btn">
-                    <span class="tap-btn-icon">👆</span>
-                    <span>Tap Race</span>
-                </button>
-                <button id="ttol-btn" class="ttol-btn">
-                    <span class="ttol-btn-icon">🤥</span>
-                    <span>2 Truths 1 Lie</span>
-                </button>
+                <div class="game-row">
+                    <button id="rps-btn" class="rps-btn">
+                        <span class="rps-btn-icon">✊</span>
+                        <span>Rock Paper Scissors</span>
+                    </button>
+                    <button class="how-to-play-btn" data-game="rps" title="How to play">?</button>
+                </div>
+                <div class="game-row">
+                    <button id="bomb-btn" class="bomb-btn">
+                        <span class="bomb-btn-icon">💣</span>
+                        <span>Bomb Pass</span>
+                    </button>
+                    <button class="how-to-play-btn" data-game="bomb" title="How to play">?</button>
+                </div>
+                <div class="game-row">
+                    <button id="tap-btn" class="tap-btn">
+                        <span class="tap-btn-icon">👆</span>
+                        <span>Tap Race</span>
+                    </button>
+                    <button class="how-to-play-btn" data-game="tap" title="How to play">?</button>
+                </div>
+                <div class="game-row">
+                    <button id="ttol-btn" class="ttol-btn">
+                        <span class="ttol-btn-icon">🤥</span>
+                        <span>2 Truths 1 Lie</span>
+                    </button>
+                    <button class="how-to-play-btn" data-game="ttol" title="How to play">?</button>
+                </div>
             </div>
             <!-- TTOL Setup Step -->
             <div id="ttol-setup-step" class="rps-setup-step hidden">
@@ -122,28 +134,6 @@
                     </button>
                 </div>
             </div>
-            <!-- Drink menu -->
-            <div id="drink-menu-step" class="drink-menu-step hidden">
-                <div class="drink-menu-tabs">
-                    <button class="drink-tab active" data-cat="all">All</button>
-                    <button class="drink-tab" data-cat="beers">🍺 Beers</button>
-                    <button class="drink-tab" data-cat="cocktails">🍹 Cocktails</button>
-                    <button class="drink-tab" data-cat="whiskey">🥃 Whiskey</button>
-                    <button class="drink-tab" data-cat="softdrinks">🥤 Softdrinks</button>
-                    <button class="drink-tab" data-cat="snacks">🍟 Snacks</button>
-                </div>
-                <div class="drink-menu-grid" id="drink-menu-grid"></div>
-                <div id="drink-send-section" class="drink-send-section hidden">
-                    <div class="note-suggestions">
-                        <button class="note-chip" data-note="Cheers! 🍻">Cheers! 🍻</button>
-                        <button class="note-chip" data-note="Enjoy! 😊">Enjoy! 😊</button>
-                        <button class="note-chip" data-note="Nice vibe! ✨">Nice vibe! ✨</button>
-                        <button class="note-chip" data-note="On me! 🥂">On me! 🥂</button>
-                    </div>
-                    <input type="text" id="drink-note" class="drink-note-input" placeholder="Or write your own note..." maxlength="100">
-                    <button id="drink-send-btn" class="btn btn-primary btn-large">Send Drink</button>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -153,8 +143,8 @@
         <div class="modal-content incoming-notification">
             <img id="incoming-photo" class="incoming-photo hidden" src="" alt="">
             <div class="incoming-icon" id="incoming-icon">🍺</div>
-            <p id="incoming-message">Someone sent you a drink!</p>
-            <p id="incoming-note" class="incoming-note hidden"></p>
+            <p id="incoming-message">Someone wants to buy you a drink!</p>
+            <p id="incoming-note" class="incoming-note">Meet at the bar table to get your drink!</p>
             <p id="incoming-queue-count" class="incoming-queue-count hidden"></p>
             <div class="incoming-buttons">
                 <button id="decline-btn" class="btn btn-secondary">Decline ✗</button>
@@ -438,6 +428,16 @@
             <p id="ttol-result-drink" class="rps-result-drink hidden"></p>
         </div>
     </div>
+
+    <!-- How to Play Modal -->
+    <div id="how-to-play-modal" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content" style="max-width: 340px; text-align: left;">
+            <button id="how-to-play-close" class="modal-close-x">&times;</button>
+            <h3 id="htp-title" style="margin: 0 0 0.75rem; font-size: 1.2rem;"></h3>
+            <div id="htp-body" style="font-size: 0.92rem; line-height: 1.5; color: #ccc;"></div>
+        </div>
+    </div>
 </div>
 {% endblock %}
 
@@ -453,7 +453,6 @@
     document.getElementById('my-name').textContent = myName;
 
     let targetSession = null;
-    let selectedDrink = null;
 
     // Profile cache: session_id -> {name, photo_url, color_frame}
     const userProfiles = {};
@@ -498,12 +497,6 @@
     // ===== Notification Queue =====
     const incomingQueue = [];
     let processingIncoming = false;
-
-    // ===== Drink Menu Data =====
-    let menuDrinks = [];
-    fetch('/api/drinks')
-        .then(res => res.json())
-        .then(drinks => { menuDrinks = drinks; });
 
     // ===== Socket Connection =====
     const socket = io();
@@ -610,7 +603,7 @@
 
     // ===== Message Events =====
     socket.on('send_success', () => {
-        showToast('Drink sent! 🍻', 'success');
+        showToast('Drink offer sent! 🍻', 'success');
     });
 
     socket.on('send_error', (data) => {
@@ -626,19 +619,18 @@
 
     socket.on('message_response', (data) => {
         const who = data.responder_name || 'They';
-        const drink = data.content || 'your drink';
         if (data.type === 'accepted') {
-            showToast(`${who} accepted your ${drink}! 🥂`, 'success');
-            sendBrowserNotification('Drink Accepted! 🥂', `${who} accepted your ${drink}`);
+            showToast(`${who} accepted! Meet them at the bar table 🥂`, 'success');
+            sendBrowserNotification('Drink Accepted! 🥂', `${who} accepted! Meet at the bar table`);
         } else {
-            showToast(`${who} declined your ${drink}`, 'info');
-            sendBrowserNotification('Drink Declined', `${who} declined your ${drink}`);
+            showToast(`${who} declined your drink offer`, 'info');
+            sendBrowserNotification('Drink Declined', `${who} declined your drink offer`);
         }
     });
 
     socket.on('response_confirmed', (data) => {
         if (data.type === 'accepted') {
-            showToast(`You accepted the ${data.content || 'drink'}! 🥂`, 'success');
+            showToast('Meet at the bar table to get your drink! 🥂', 'success');
         }
     });
 
@@ -648,14 +640,10 @@
 
     // ===== Action Modal =====
     function openActionModal() {
-        selectedDrink = null;
         const profile = userProfiles[targetSession];
         document.getElementById('target-name').textContent = profile ? profile.name : 'Someone';
-        document.getElementById('drink-note').value = '';
 
         document.getElementById('action-step').classList.remove('hidden');
-        document.getElementById('drink-menu-step').classList.add('hidden');
-        document.getElementById('drink-send-section').classList.add('hidden');
 
         document.getElementById('action-modal').classList.remove('hidden');
     }
@@ -671,83 +659,13 @@
     document.querySelector('.modal-close').addEventListener('click', closeActionModal);
     document.querySelector('#action-modal .modal-backdrop').addEventListener('click', closeActionModal);
 
-    // Buy a Drink -> show drink menu
+    // Buy a Drink -> confirm and send
     document.getElementById('buy-drink-btn').addEventListener('click', () => {
-        document.getElementById('action-step').classList.add('hidden');
-        document.getElementById('drink-menu-step').classList.remove('hidden');
-        renderDrinkMenu('all');
-    });
-
-    // Category tabs
-    document.querySelectorAll('.drink-tab').forEach(tab => {
-        tab.addEventListener('click', () => {
-            document.querySelectorAll('.drink-tab').forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
-            renderDrinkMenu(tab.dataset.cat);
-        });
-    });
-
-    function renderDrinkMenu(category) {
-        const grid = document.getElementById('drink-menu-grid');
-        const drinks = category === 'all' ? menuDrinks : menuDrinks.filter(d => d.category === category);
-
-        grid.innerHTML = drinks.map((d) => {
-            const idx = menuDrinks.indexOf(d);
-            const isSelected = selectedDrink && selectedDrink.name === d.name;
-            return `
-                <div class="drink-menu-item${isSelected ? ' selected' : ''}" data-idx="${idx}">
-                    <div class="drink-menu-item-img">
-                        <img src="${d.img}" alt="${d.name}" loading="lazy">
-                    </div>
-                    <div class="drink-menu-item-name">${d.name}</div>
-                    <div class="drink-menu-item-price">${d.price}</div>
-                </div>
-            `;
-        }).join('');
-
-        grid.querySelectorAll('.drink-menu-item').forEach(item => {
-            item.addEventListener('click', () => {
-                const idx = parseInt(item.dataset.idx);
-                selectedDrink = menuDrinks[idx];
-                grid.querySelectorAll('.drink-menu-item').forEach(el => el.classList.remove('selected'));
-                item.classList.add('selected');
-                document.getElementById('drink-send-section').classList.remove('hidden');
-                document.getElementById('drink-send-btn').textContent = `Send ${selectedDrink.name} (${selectedDrink.price})`;
-            });
-        });
-    }
-
-    // Note chips
-    document.querySelectorAll('.note-chip').forEach(chip => {
-        chip.addEventListener('click', () => {
-            const noteInput = document.getElementById('drink-note');
-            if (chip.classList.contains('active')) {
-                chip.classList.remove('active');
-                noteInput.value = '';
-            } else {
-                document.querySelectorAll('.note-chip').forEach(c => c.classList.remove('active'));
-                chip.classList.add('active');
-                noteInput.value = chip.dataset.note;
-            }
-        });
-    });
-
-    document.getElementById('drink-note').addEventListener('input', () => {
-        document.querySelectorAll('.note-chip').forEach(c => c.classList.remove('active'));
-    });
-
-    // Send drink
-    document.getElementById('drink-send-btn').addEventListener('click', () => {
-        if (!selectedDrink) return;
-        const note = document.getElementById('drink-note').value.trim();
-        const drinkLabel = `${selectedDrink.name} (${selectedDrink.price})`;
-
-        showConfirm(`Send ${drinkLabel} to ${userName(targetSession)}?`, () => {
+        showConfirm(`Buy a drink for ${userName(targetSession)}?`, () => {
             socket.emit('send_message', {
                 to_session: targetSession,
                 message_type: 'drink',
-                content: selectedDrink.name,
-                note: note || '',
+                content: 'a drink',
             });
             closeActionModal();
         });
@@ -774,15 +692,8 @@
         document.getElementById('incoming-icon').textContent = '🍺';
         const senderName = data.from_name || userName(data.from_session);
         document.getElementById('incoming-message').textContent =
-            `${senderName} wants to buy you a ${data.content}!`;
-
-        const noteEl = document.getElementById('incoming-note');
-        if (data.note) {
-            noteEl.textContent = `"${data.note}"`;
-            noteEl.classList.remove('hidden');
-        } else {
-            noteEl.classList.add('hidden');
-        }
+            `${senderName} wants to buy you a drink!`;
+        document.getElementById('incoming-note').textContent = 'Meet at the bar table to get your drink!';
 
         const queueCountEl = document.getElementById('incoming-queue-count');
         if (incomingQueue.length > 1) {
@@ -795,10 +706,9 @@
         document.getElementById('incoming-modal').classList.remove('hidden');
         if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
 
-        const noteText = data.note ? ` "${data.note}"` : '';
         sendBrowserNotification(
-            `${senderName} sent you a drink!`,
-            `${data.content}${noteText}`
+            `${senderName} wants to buy you a drink!`,
+            'Meet at the bar table to get your drink!'
         );
     }
 
@@ -897,7 +807,6 @@
 
     document.getElementById('rps-btn').addEventListener('click', () => {
         document.getElementById('action-step').classList.add('hidden');
-        document.getElementById('drink-menu-step').classList.add('hidden');
         document.getElementById('bomb-setup-step').classList.add('hidden');
         document.getElementById('tap-setup-step').classList.add('hidden');
         document.getElementById('ttol-setup-step').classList.add('hidden');
@@ -917,7 +826,7 @@
         });
     });
 
-    socket.on('rps_error', (data) => showToast(data.message, 'error'));
+    socket.on('rps_error', (data) => { hideChallengeWaiting(); showToast(data.message, 'error'); });
 
     socket.on('rps_declined', (data) => {
         hideChallengeWaiting();
@@ -1057,7 +966,6 @@
 
     document.getElementById('bomb-btn').addEventListener('click', () => {
         document.getElementById('action-step').classList.add('hidden');
-        document.getElementById('drink-menu-step').classList.add('hidden');
         document.getElementById('rps-setup-step').classList.add('hidden');
         document.getElementById('tap-setup-step').classList.add('hidden');
         document.getElementById('ttol-setup-step').classList.add('hidden');
@@ -1077,7 +985,7 @@
         });
     });
 
-    socket.on('bomb_error', (data) => showToast(data.message, 'error'));
+    socket.on('bomb_error', (data) => { hideChallengeWaiting(); showToast(data.message, 'error'); });
 
     socket.on('bomb_declined', (data) => {
         hideChallengeWaiting();
@@ -1252,7 +1160,6 @@
 
     document.getElementById('tap-btn').addEventListener('click', () => {
         document.getElementById('action-step').classList.add('hidden');
-        document.getElementById('drink-menu-step').classList.add('hidden');
         document.getElementById('rps-setup-step').classList.add('hidden');
         document.getElementById('bomb-setup-step').classList.add('hidden');
         document.getElementById('ttol-setup-step').classList.add('hidden');
@@ -1272,7 +1179,7 @@
         });
     });
 
-    socket.on('tap_error', (data) => showToast(data.message, 'error'));
+    socket.on('tap_error', (data) => { hideChallengeWaiting(); showToast(data.message, 'error'); });
 
     socket.on('tap_declined', (data) => {
         hideChallengeWaiting();
@@ -1480,9 +1387,63 @@
         return div.innerHTML;
     }
 
+    // ===== How to Play =====
+    const gameRules = {
+        rps: {
+            title: '✊ Rock Paper Scissors',
+            body: `<p><strong>How it works:</strong></p>
+<p>1. Choose your mode: <em>Just for Fun</em> or <em>Play for a Drink</em> (loser buys).</p>
+<p>2. Both players pick Rock, Paper, or Scissors.</p>
+<p>3. Rock beats Scissors, Scissors beats Paper, Paper beats Rock.</p>
+<p>4. You have <strong>30 seconds</strong> to choose or you forfeit!</p>`
+        },
+        bomb: {
+            title: '💣 Bomb Pass',
+            body: `<p><strong>How it works:</strong></p>
+<p>1. A bomb starts with the challenger.</p>
+<p>2. Tap <strong>PASS!</strong> to throw it to your opponent.</p>
+<p>3. They pass it back, you pass it again — back and forth!</p>
+<p>4. The bomb has a <strong>secret fuse</strong> (8–15 seconds). Whoever is holding it when it explodes <strong>loses</strong>!</p>
+<p>5. There's a 0.5s cooldown between passes — timing is everything.</p>`
+        },
+        tap: {
+            title: '👆 Tap Race',
+            body: `<p><strong>How it works:</strong></p>
+<p>1. After a 3-second countdown, both players tap as fast as they can!</p>
+<p>2. You have <strong>10 seconds</strong> to get the most taps.</p>
+<p>3. Watch your runner race up the track with each tap.</p>
+<p>4. Highest tap count wins!</p>`
+        },
+        ttol: {
+            title: '🤥 2 Truths 1 Lie',
+            body: `<p><strong>How it works:</strong></p>
+<p>1. <strong>Write Phase</strong> (90s): Both players write 3 statements — 2 truths and 1 lie. Tap the lie to mark it.</p>
+<p>2. <strong>Guess Phase</strong> (60s): You see your opponent's 3 statements. Tap the one you think is the lie!</p>
+<p>3. If you spot their lie and they miss yours — you win! If you both guess right (or both wrong), it's a draw.</p>`
+        },
+    };
+
+    document.querySelectorAll('.how-to-play-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const game = btn.dataset.game;
+            const rules = gameRules[game];
+            if (!rules) return;
+            document.getElementById('htp-title').textContent = rules.title;
+            document.getElementById('htp-body').innerHTML = rules.body;
+            document.getElementById('how-to-play-modal').classList.remove('hidden');
+        });
+    });
+
+    document.getElementById('how-to-play-close').addEventListener('click', () => {
+        document.getElementById('how-to-play-modal').classList.add('hidden');
+    });
+    document.querySelector('#how-to-play-modal .modal-backdrop').addEventListener('click', () => {
+        document.getElementById('how-to-play-modal').classList.add('hidden');
+    });
+
     document.getElementById('ttol-btn').addEventListener('click', () => {
         document.getElementById('action-step').classList.add('hidden');
-        document.getElementById('drink-menu-step').classList.add('hidden');
         document.getElementById('rps-setup-step').classList.add('hidden');
         document.getElementById('bomb-setup-step').classList.add('hidden');
         document.getElementById('tap-setup-step').classList.add('hidden');
@@ -1502,7 +1463,7 @@
         });
     });
 
-    socket.on('ttol_error', (data) => showToast(data.message, 'error'));
+    socket.on('ttol_error', (data) => { hideChallengeWaiting(); showToast(data.message, 'error'); });
 
     socket.on('ttol_declined', (data) => {
         hideChallengeWaiting();
@@ -1581,6 +1542,7 @@
 
     socket.on('ttol_start', (data) => {
         if (data.session_a !== sessionId && data.session_b !== sessionId) return;
+        hideChallengeWaiting();
         ttolGameId = data.game_id;
         ttolOpponentSession = data.session_a === sessionId ? data.session_b : data.session_a;
         ttolLieIndex = null;

@@ -77,67 +77,6 @@ _initial_cleanup.start()
 models.init_db()
 models.init_menu_table()
 
-# Menu data (single source of truth)
-_U = 'https://images.unsplash.com'
-
-DRINKS = [
-    # Beer & Cider
-    {'name': 'Guinness', 'price': '30 zł', 'category': 'beers', 'img': f'{_U}/photo-1730243694317-167fbf9eaa42?w=96&h=96&fit=crop'},
-    {'name': 'Magners', 'price': '27 zł', 'category': 'beers', 'img': f'{_U}/photo-1600434610853-fcf8e079731b?w=96&h=96&fit=crop'},
-    {'name': 'Okocim', 'price': '15 zł', 'category': 'beers', 'img': f'{_U}/photo-1623937228271-992646fb0fba?w=96&h=96&fit=crop'},
-    {'name': 'Blanc 1664', 'price': '27 zł', 'category': 'beers', 'img': f'{_U}/photo-1760135866428-c6ac0091cb9f?w=96&h=96&fit=crop'},
-    {'name': 'Carlsberg', 'price': '19 zł', 'category': 'beers', 'img': f'{_U}/photo-1619007495134-fed1dda8d8cf?w=96&h=96&fit=crop'},
-    # Cocktails
-    {'name': 'Sex on the Beach', 'price': '32 zł', 'category': 'cocktails', 'img': f'{_U}/photo-1582269438702-578efa319292?w=96&h=96&fit=crop'},
-    {'name': 'Whiskey Sour', 'price': '34 zł', 'category': 'cocktails', 'img': f'{_U}/photo-1541546006121-5c3bc5e8c7b9?w=96&h=96&fit=crop'},
-    {'name': 'Aperol Spritz', 'price': '32 zł', 'category': 'cocktails', 'img': f'{_U}/photo-1588685344608-514d42e02603?w=96&h=96&fit=crop'},
-    {'name': 'Margarita', 'price': '34 zł', 'category': 'cocktails', 'img': f'{_U}/photo-1551782450-3939704166fc?w=96&h=96&fit=crop'},
-    {'name': 'Cuba Libre', 'price': '30 zł', 'category': 'cocktails', 'img': f'{_U}/photo-1581636625402-29b2a704ef13?w=96&h=96&fit=crop'},
-    {'name': 'Irish Coffee', 'price': '35 zł', 'category': 'cocktails', 'img': f'{_U}/photo-1551198297-0a648941bd7b?w=96&h=96&fit=crop'},
-    {'name': 'Vodka Redbull', 'price': '32 zł', 'category': 'cocktails', 'img': f'{_U}/photo-1613218222876-954978a4404e?w=96&h=96&fit=crop'},
-    {'name': 'Tropical Rumbull', 'price': '33 zł', 'category': 'cocktails', 'img': f'{_U}/photo-1625321643320-5321f48312b2?w=96&h=96&fit=crop'},
-    {'name': 'Jagerbomb', 'price': '32 zł', 'category': 'cocktails', 'img': f'{_U}/photo-1649091364308-49233cbf6ac0?w=96&h=96&fit=crop'},
-    {'name': 'Gin and Tonic', 'price': '30 zł', 'category': 'cocktails', 'img': f'{_U}/photo-1597960194480-fc6b5e3181fd?w=96&h=96&fit=crop'},
-    {'name': 'Vodka White', 'price': '25 zł', 'category': 'cocktails', 'img': f'{_U}/photo-1589132971214-ed8169976abd?w=96&h=96&fit=crop'},
-    {'name': 'Vodka Coke', 'price': '25 zł', 'category': 'cocktails', 'img': f'{_U}/photo-1544241907-f3f1f5ded15a?w=96&h=96&fit=crop'},
-    {'name': 'Texas Long Island', 'price': '45 zł', 'category': 'cocktails', 'img': f'{_U}/photo-1514359652734-6205dd477a1e?w=96&h=96&fit=crop'},
-    # Whiskey Drinks
-    {'name': 'Bushmills', 'price': '18 zł', 'category': 'whiskey', 'img': f'{_U}/photo-1638884904408-fbc6ab0c200f?w=96&h=96&fit=crop'},
-    {'name': 'Jameson', 'price': '18 zł', 'category': 'whiskey', 'img': f'{_U}/photo-1561293739-2da6674c7e4f?w=96&h=96&fit=crop'},
-    {'name': 'Dubliner', 'price': '18 zł', 'category': 'whiskey', 'img': f'{_U}/photo-1638884904408-fbc6ab0c200f?w=96&h=96&fit=crop'},
-    {'name': 'Jack Daniels', 'price': '25 zł', 'category': 'whiskey', 'img': f'{_U}/photo-1692713463309-fc6b9a43a226?w=96&h=96&fit=crop'},
-    {'name': 'Jack Daniels Honey', 'price': '25 zł', 'category': 'whiskey', 'img': f'{_U}/photo-1607182389566-0295384bf75c?w=96&h=96&fit=crop'},
-    {'name': 'Whiskey Coke', 'price': '35 zł', 'category': 'whiskey', 'img': f'{_U}/photo-1627310670374-5d47b19879a3?w=96&h=96&fit=crop'},
-    # Softdrinks
-    {'name': 'Carlsberg (NA)', 'price': '19 zł', 'category': 'softdrinks', 'img': f'{_U}/photo-1619007495134-fed1dda8d8cf?w=96&h=96&fit=crop'},
-    {'name': 'Somersby', 'price': '19 zł', 'category': 'softdrinks', 'img': f'{_U}/photo-1600434610853-fcf8e079731b?w=96&h=96&fit=crop'},
-    {'name': 'Redbull', 'price': '17 zł', 'category': 'softdrinks', 'img': f'{_U}/photo-1613218222876-954978a4404e?w=96&h=96&fit=crop'},
-    {'name': 'Coca Cola', 'price': '10 zł', 'category': 'softdrinks', 'img': f'{_U}/photo-1574706226623-e5cc0da928c6?w=96&h=96&fit=crop'},
-    {'name': 'Fanta', 'price': '10 zł', 'category': 'softdrinks', 'img': f'{_U}/photo-1625740822008-e45abf4e01d5?w=96&h=96&fit=crop'},
-    {'name': 'Sprite', 'price': '10 zł', 'category': 'softdrinks', 'img': f'{_U}/photo-1592860893757-84536a1c9b82?w=96&h=96&fit=crop'},
-    {'name': 'Water', 'price': '10 zł', 'category': 'softdrinks', 'img': f'{_U}/photo-1534616042650-80f5c9b61f09?w=96&h=96&fit=crop'},
-    {'name': 'Tea Assorted', 'price': '10 zł', 'category': 'softdrinks', 'img': f'{_U}/photo-1570059560477-d61ca8bfda33?w=96&h=96&fit=crop'},
-    # Snacks
-    {'name': 'Chips', 'price': '15 zł', 'category': 'snacks', 'img': f'{_U}/photo-1534938665420-4193effeacc4?w=96&h=96&fit=crop'},
-    {'name': 'Onion Rings', 'price': '15 zł', 'category': 'snacks', 'img': f'{_U}/photo-1639024469010-44d77e559f7d?w=96&h=96&fit=crop'},
-    {'name': 'Squid Rings (Calamari)', 'price': '21 zł', 'category': 'snacks', 'img': f'{_U}/photo-1682264895449-f75b342cbab6?w=96&h=96&fit=crop'},
-    {'name': 'Chicken Nuggets', 'price': '20 zł', 'category': 'snacks', 'img': f'{_U}/photo-1657271511865-f610b280dca4?w=96&h=96&fit=crop'},
-    {'name': 'Chicken Strips', 'price': '25 zł', 'category': 'snacks', 'img': f'{_U}/photo-1605291581926-df4bf7ee3e89?w=96&h=96&fit=crop'},
-    {'name': 'Crisps M', 'price': '10 zł', 'category': 'snacks', 'img': f'{_U}/photo-1555041469-6b4032059d29?w=96&h=96&fit=crop'},
-    {'name': 'Crisps L', 'price': '15 zł', 'category': 'snacks', 'img': f'{_U}/photo-1555041469-6b4032059d29?w=96&h=96&fit=crop'},
-]
-
-# Seed menu_items DB from hardcoded DRINKS (only if empty)
-models.seed_menu_items(DRINKS)
-
-
-def get_drinks():
-    """Get drinks from DB (falls back to hardcoded DRINKS if DB empty)."""
-    items = models.get_all_menu_items()
-    if items:
-        return [{'name': i['name'], 'price': i['price'], 'category': i['category'], 'img': i['img']} for i in items]
-    return DRINKS
-
 # ============== Routes ==============
 
 @app.route('/')
@@ -155,11 +94,6 @@ def api_users():
     """Get all active users."""
     exclude = request.args.get('exclude')
     return jsonify(models.get_active_users(exclude_session=exclude))
-
-@app.route('/api/drinks')
-def api_drinks():
-    """Get drink menu data."""
-    return jsonify(get_drinks())
 
 @app.route('/api/profile', methods=['POST'])
 def api_create_profile():
@@ -512,7 +446,7 @@ def handle_send_message(data):
     if message_type == 'drink':
         target_profile = models.get_profile(to_session)
         target_name = target_profile['name'] if target_profile else 'someone'
-        models.log_activity('drink', f'{sender_name} sent {content} to {target_name}', sender_session)
+        models.log_activity('drink', f'{sender_name} offered a drink to {target_name}', sender_session)
     else:
         models.log_activity('message', f'{sender_name} messaged someone', sender_session)
 
