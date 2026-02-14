@@ -175,6 +175,29 @@ body {
     color: var(--text-secondary);
 }
 
+.profile-instagram-input {
+    width: 100%;
+    padding: 12px 20px;
+    background-color: var(--bg-secondary);
+    border: 2px solid var(--bg-tertiary);
+    border-radius: var(--border-radius);
+    color: var(--text-primary);
+    font-size: 16px;
+    font-family: inherit;
+    text-align: center;
+    outline: none;
+    transition: border-color 0.2s ease;
+    margin-bottom: 20px;
+}
+
+.profile-instagram-input:focus {
+    border-color: var(--accent);
+}
+
+.profile-instagram-input::placeholder {
+    color: var(--text-secondary);
+}
+
 .profile-photo-upload {
     margin-bottom: 24px;
 }
@@ -1426,6 +1449,13 @@ body {
 
 .modal-header h3 {
     font-size: 20px;
+}
+
+.target-instagram {
+    font-size: 14px;
+    color: var(--accent);
+    margin: -20px 0 16px;
+    font-weight: 500;
 }
 
 .modal-close {

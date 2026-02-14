@@ -41,6 +41,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3><span id="target-name">-</span></h3>
+                <p id="target-instagram" class="target-instagram hidden"></p>
                 <button class="modal-close">&times;</button>
             </div>
             <!-- Action buttons -->
@@ -563,6 +564,7 @@
                 name: u.name,
                 photo_url: u.photo_url,
                 color_frame: u.color_frame,
+                instagram: u.instagram,
             };
         });
 
@@ -642,6 +644,14 @@
     function openActionModal() {
         const profile = userProfiles[targetSession];
         document.getElementById('target-name').textContent = profile ? profile.name : 'Someone';
+
+        const igEl = document.getElementById('target-instagram');
+        if (profile && profile.instagram) {
+            igEl.textContent = '@' + profile.instagram;
+            igEl.classList.remove('hidden');
+        } else {
+            igEl.classList.add('hidden');
+        }
 
         document.getElementById('action-step').classList.remove('hidden');
 

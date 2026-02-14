@@ -124,8 +124,10 @@ def api_create_profile():
     if color_frame and color_frame not in ('red', 'yellow', 'green'):
         color_frame = None
 
-    models.create_profile(session_id, name, photo_url, color_frame)
-    return jsonify({'success': True, 'name': name, 'photo_url': photo_url, 'color_frame': color_frame})
+    instagram = request.form.get('instagram', '').strip() or None
+
+    models.create_profile(session_id, name, photo_url, color_frame, instagram)
+    return jsonify({'success': True, 'name': name, 'photo_url': photo_url, 'color_frame': color_frame, 'instagram': instagram})
 
 @app.route('/api/profile/<session_id>')
 def api_get_profile(session_id):

@@ -83,6 +83,10 @@ def init_db():
             cursor.execute('ALTER TABLE profiles ADD COLUMN is_online BOOLEAN DEFAULT 0')
         except sqlite3.OperationalError:
             pass
+        try:
+            cursor.execute('ALTER TABLE profiles ADD COLUMN instagram TEXT')
+        except sqlite3.OperationalError:
+            pass
 
         # Reset all users to offline on startup (in-memory state is fresh)
         cursor.execute('UPDATE profiles SET is_online = 0')
@@ -113,14 +117,14 @@ def get_active_users(exclude_session: str = None) -> list:
             cursor = conn.cursor()
             if exclude_session:
                 cursor.execute('''
-                    SELECT session_id, name, photo_url, color_frame
+                    SELECT session_id, name, photo_url, color_frame, instagram
                     FROM profiles
                     WHERE is_online = 1 AND session_id != ?
                     ORDER BY created_at
                 ''', (exclude_session,))
             else:
                 cursor.execute('''
-                    SELECT session_id, name, photo_url, color_frame
+                    SELECT session_id, name, photo_url, color_frame, instagram
                     FROM profiles
                     WHERE is_online = 1
                     ORDER BY created_at
@@ -176,14 +180,14 @@ def get_message(message_id):
 
 # ============== Profiles ==============
 
-def create_profile(session_id: str, name: str, photo_url: str = None, color_frame: str = None):
+def create_profile(session_id: str, name: str, photo_url: str = None, color_frame: str = None, instagram: str = None):
     """Create or update a user profile."""
     with get_db() as conn:
         cursor = conn.cursor()
         cursor.execute('''
-            INSERT OR REPLACE INTO profiles (session_id, name, photo_url, color_frame, is_online)
-            VALUES (?, ?, ?, ?, 0)
-        ''', (session_id, name, photo_url, color_frame))
+            INSERT OR REPLACE INTO profiles (session_id, name, photo_url, color_frame, instagram, is_online)
+            VALUES (?, ?, ?, ?, ?, 0)
+        ''', (session_id, name, photo_url, color_frame, instagram))
         conn.commit()
 
 def get_profile(session_id: str):
@@ -191,7 +195,7 @@ def get_profile(session_id: str):
     try:
         with get_db() as conn:
             cursor = conn.cursor()
-            cursor.execute('SELECT session_id, name, photo_url, color_frame FROM profiles WHERE session_id = ?', (session_id,))
+            cursor.execute('SELECT session_id, name, photo_url, color_frame, instagram FROM profiles WHERE session_id = ?', (session_id,))
             row = cursor.fetchone()
             return dict(row) if row else None
     except sqlite3.Error:

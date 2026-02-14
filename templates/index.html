@@ -148,6 +148,9 @@
             <input type="file" id="profile-photo-album" accept="image/*" style="display:none;">
         </div>
 
+        <input type="text" id="profile-instagram" class="profile-instagram-input"
+               placeholder="Instagram handle (optional)" maxlength="30" autocomplete="off">
+
         <div class="color-picker-section">
             <p class="color-picker-label">Pick your frame color <span class="optional-tag">(optional)</span></p>
             <div class="color-picker-buttons">
@@ -496,12 +499,17 @@
 
         const sessionId = 'session_' + Math.random().toString(36).substr(2, 9);
 
+        const instagram = document.getElementById('profile-instagram').value.trim().replace(/^@/, '');
+
         const formData = new FormData();
         formData.append('session_id', sessionId);
         formData.append('name', name);
         formData.append('photo', activePhotoInput.files[0]);
         if (selectedColor) {
             formData.append('color_frame', selectedColor);
+        }
+        if (instagram) {
+            formData.append('instagram', instagram);
         }
 
         try {
