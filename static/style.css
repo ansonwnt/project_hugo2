@@ -680,14 +680,14 @@ body {
     align-items: center;
     justify-content: center;
     text-align: center;
-    padding: 60px 24px 40px;
-    min-height: 80vh;
+    padding: 40px 24px 100px;
+    min-height: 100dvh;
     animation: fadeIn 0.3s ease;
 }
 
 .notif-gate-icon {
     color: var(--accent);
-    margin-bottom: 24px;
+    margin-bottom: 16px;
     animation: bellShake 1s ease-in-out infinite;
 }
 
@@ -723,7 +723,7 @@ body {
     font-size: 14px;
     color: var(--error);
     font-weight: 600;
-    margin-bottom: 32px;
+    margin-bottom: 24px;
 }
 
 .notif-gate-btn {
