@@ -475,15 +475,36 @@
         validationMsg.classList.add('hidden');
     });
 
+    // Compress image client-side before upload (phone photos can be 5-10MB+)
+    let compressedPhotoBlob = null;
+
+    function compressImage(file, maxSize = 1024, quality = 0.85) {
+        return new Promise((resolve) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let w = img.width, h = img.height;
+                if (w > h) {
+                    if (w > maxSize) { h = h * maxSize / w; w = maxSize; }
+                } else {
+                    if (h > maxSize) { w = w * maxSize / h; h = maxSize; }
+                }
+                canvas.width = w;
+                canvas.height = h;
+                canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                canvas.toBlob((blob) => resolve(blob), 'image/jpeg', quality);
+            };
+            img.src = URL.createObjectURL(file);
+        });
+    }
+
     // Shared photo preview handler
-    function handlePhotoSelected(input) {
+    async function handlePhotoSelected(input) {
         if (input.files.length > 0) {
             activePhotoInput = input;
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                photoPreview.innerHTML = `<img src="${e.target.result}" alt="Photo">`;
-            };
-            reader.readAsDataURL(input.files[0]);
+            compressedPhotoBlob = await compressImage(input.files[0]);
+            const previewUrl = URL.createObjectURL(compressedPhotoBlob);
+            photoPreview.innerHTML = `<img src="${previewUrl}" alt="Photo">`;
             validationMsg.classList.add('hidden');
         }
     }
@@ -494,7 +515,7 @@
     // Submit profile and go to people page
     nextBtn.addEventListener('click', async () => {
         const name = nameInput.value.trim();
-        const hasPhoto = activePhotoInput && activePhotoInput.files.length > 0;
+        const hasPhoto = compressedPhotoBlob !== null;
 
         // Validate required fields
         if (!name && !hasPhoto) {
@@ -525,7 +546,7 @@
         const formData = new FormData();
         formData.append('session_id', sessionId);
         formData.append('name', name);
-        formData.append('photo', activePhotoInput.files[0]);
+        formData.append('photo', compressedPhotoBlob, 'photo.jpg');
         if (selectedColor) {
             formData.append('color_frame', selectedColor);
         }

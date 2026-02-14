@@ -1215,6 +1215,7 @@
     let tapOpponentSession = null;
     let tapActive = false;
     let tapMyCount = 0;
+    let tapImPlayerA = true;
 
     document.getElementById('tap-btn').addEventListener('click', () => {
         document.getElementById('action-step').classList.add('hidden');
@@ -1280,6 +1281,7 @@
         hideChallengeWaiting();
         tapGameId = data.game_id;
         tapOpponentSession = data.session_a === sessionId ? data.session_b : data.session_a;
+        tapImPlayerA = (data.session_a === sessionId);
         tapActive = false;
         tapMyCount = 0;
 
@@ -1373,7 +1375,7 @@
     tapBtnEl.addEventListener('mousedown', handleTap);
 
     socket.on('tap_update', (data) => {
-        const theirCount = Math.max(0, (data.count_a + data.count_b) - tapMyCount);
+        const theirCount = tapImPlayerA ? data.count_b : data.count_a;
         document.getElementById('tap-count-them').textContent = theirCount;
         const maxTaps = 150;
         const theirPct = Math.min((theirCount / maxTaps) * 100, 100);
@@ -1391,8 +1393,8 @@
         const resultDrink = document.getElementById('tap-result-drink');
         const resultScores = document.getElementById('tap-result-scores');
 
-        const myScore = tapMyCount;
-        const theirScore = (data.count_a + data.count_b) - tapMyCount;
+        const myScore = tapImPlayerA ? data.count_a : data.count_b;
+        const theirScore = tapImPlayerA ? data.count_b : data.count_a;
         resultScores.textContent = `You: ${myScore}  vs  ${userName(tapOpponentSession)}: ${theirScore}`;
 
         if (data.result === 'draw') {
