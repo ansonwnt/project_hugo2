@@ -1,9 +1,9 @@
-Build a restaurant social web app called "Hugo" with Flask. Focus on making it extremely user-friendly and intuitive.
+Build a restaurant social web app called "Shamrock" with Flask. Focus on making it extremely user-friendly and intuitive.
 
 ## Pages:
 
 ### 1. Landing Page (index.html)
-- Clean, welcoming screen with app name "Hugo" and tagline: "Connect with other tables"
+- Clean, welcoming screen with app name "Shamrock" and tagline: "Connect with other tables"
 - Large, tappable number pad (1-8) to select your table
 - Big, obvious "Join Table" button
 - Small text below: "Other guests will see your table is occupied"
@@ -75,7 +75,7 @@ Build a restaurant social web app called "Hugo" with Flask. Focus on making it e
 - No user accounts needed
 
 ### File Structure:
-project_hugo/
+project_shamrock/
 ├── app.py              # Flask app, routes, SocketIO events
 ├── models.py           # SQLite database models
 ├── templates/

@@ -1,4 +1,4 @@
-# Hugo
+# Shamrock
 
 A restaurant social web app that lets guests at different tables connect with each other — send messages and buy drinks for people at other tables.
 
@@ -22,8 +22,8 @@ A restaurant social web app that lets guests at different tables connect with ea
 
 ```bash
 # Clone the repo
-git clone https://github.com/ansonwnt/project_hugo.git
-cd project_hugo
+git clone https://github.com/ansonwnt/project_shamrock.git
+cd project_shamrock
 
 # Create virtual environment
 python3 -m venv venv
@@ -60,7 +60,7 @@ Open two browser windows (or use incognito for the second):
 ## Project Structure
 
 ```
-Hugo/
+Shamrock/
 ├── app.py              # Flask server + WebSocket handlers
 ├── models.py           # SQLite database functions
 ├── requirements.txt    # Python dependencies

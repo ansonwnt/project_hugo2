@@ -19,12 +19,12 @@ from datetime import datetime, timedelta
 import threading
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'pakyb-secret-key-change-in-production')
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'shamrock-secret-key-change-in-production')
 app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # 5MB max upload
 
 UPLOAD_FOLDER = os.path.join(app.static_folder, 'uploads')
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
-ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'pakyb2024')
+ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'shamrock2024')
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -76,6 +76,7 @@ _initial_cleanup.start()
 # Initialize database on startup
 models.init_db()
 models.init_menu_table()
+models.init_game_results_table()
 
 # ============== Routes ==============
 
@@ -88,6 +89,11 @@ def index():
 def people():
     """People page - main interaction area."""
     return render_template('people.html')
+
+@app.route('/activity')
+def activity_page():
+    """Activity page - user's personal history."""
+    return render_template('activity.html')
 
 @app.route('/api/users')
 def api_users():
@@ -136,6 +142,59 @@ def api_get_profile(session_id):
     if profile:
         return jsonify(profile)
     return jsonify({'error': 'Profile not found'}), 404
+
+@app.route('/api/activity/<session_id>')
+def api_user_activity(session_id):
+    """Get combined activity (drinks + games) for a user."""
+    import json as json_mod
+    messages = models.get_user_messages(session_id, limit=50)
+    games = models.get_user_game_results(session_id, limit=50)
+
+    activity = []
+
+    for msg in messages:
+        other_session = msg['to_session'] if msg['from_session'] == session_id else msg['from_session']
+        other_profile = models.get_profile(other_session)
+        other_name = other_profile['name'] if other_profile else 'Someone'
+        other_photo = other_profile.get('photo_url') if other_profile else None
+
+        activity.append({
+            'type': 'drink',
+            'direction': 'sent' if msg['from_session'] == session_id else 'received',
+            'other_name': other_name,
+            'other_photo': other_photo,
+            'status': msg['status'],
+            'created_at': msg['created_at'],
+        })
+
+    for game in games:
+        other_session = game['session_b'] if game['session_a'] == session_id else game['session_a']
+        other_profile = models.get_profile(other_session)
+        other_name = other_profile['name'] if other_profile else 'Someone'
+        other_photo = other_profile.get('photo_url') if other_profile else None
+
+        if game['winner_session'] == session_id:
+            outcome = 'won'
+        elif game['loser_session'] == session_id:
+            outcome = 'lost'
+        else:
+            outcome = 'tied'
+
+        details = json_mod.loads(game['details']) if game.get('details') else {}
+
+        activity.append({
+            'type': 'game',
+            'game_type': game['game_type'],
+            'other_name': other_name,
+            'other_photo': other_photo,
+            'outcome': outcome,
+            'mode': game['mode'],
+            'details': details,
+            'created_at': game['created_at'],
+        })
+
+    activity.sort(key=lambda x: x['created_at'] or '', reverse=True)
+    return jsonify(activity)
 
 @app.route('/sw.js')
 def service_worker():
@@ -552,6 +611,11 @@ def finish_game(game_id):
         }, room=f'user_{loser_session}')
 
     models.log_activity('game', f'RPS: {game["session_a"][:8]} vs {game["session_b"][:8]} → {result_key}', game['session_a'])
+    models.save_game_result(
+        game_type='rps', session_a=game['session_a'], session_b=game['session_b'],
+        winner_session=winner_session, loser_session=loser_session, result=result_key,
+        mode=game['mode'], details={'choice_a': game['choice_a'], 'choice_b': game['choice_b']}
+    )
     print(f"RPS game {game_id}: {result_key}")
 
 @socketio.on('rps_challenge')
@@ -707,6 +771,12 @@ def finish_bomb_game(game_id):
     }, room=f'user_{loser_session}')
 
     models.log_activity('game', f'Bomb Pass: {winner_session[:8]} beat {loser_session[:8]}', winner_session)
+    models.save_game_result(
+        game_type='bomb', session_a=game['session_a'], session_b=game['session_b'],
+        winner_session=winner_session, loser_session=loser_session,
+        result='win_a' if winner_session == game['session_a'] else 'win_b',
+        mode=game['mode']
+    )
     print(f"Bomb game {game_id}: {loser_session[:8]} exploded!")
 
 @socketio.on('bomb_challenge')
@@ -876,6 +946,17 @@ def finish_tap_game(game_id):
         }, room=f'user_{loser}')
 
     models.log_activity('game', f'Tap Race: {count_a} vs {count_b}', game['session_a'])
+    if count_a == count_b:
+        tap_winner, tap_loser, tap_result = None, None, 'draw'
+    elif count_a > count_b:
+        tap_winner, tap_loser, tap_result = game['session_a'], game['session_b'], 'win_a'
+    else:
+        tap_winner, tap_loser, tap_result = game['session_b'], game['session_a'], 'win_b'
+    models.save_game_result(
+        game_type='tap', session_a=game['session_a'], session_b=game['session_b'],
+        winner_session=tap_winner, loser_session=tap_loser, result=tap_result,
+        mode=game['mode'], details={'count_a': count_a, 'count_b': count_b}
+    )
     print(f"Tap race {game_id}: A={count_a} B={count_b}")
 
 @socketio.on('tap_challenge')
@@ -1053,6 +1134,17 @@ def finish_ttol_game(game_id):
             'winner': winner, 'loser': loser,
         }, room=f'user_{loser}')
 
+    if a_correct == b_correct:
+        ttol_winner, ttol_loser, ttol_result = None, None, 'draw'
+    elif a_correct:
+        ttol_winner, ttol_loser, ttol_result = game['session_a'], game['session_b'], 'win_a'
+    else:
+        ttol_winner, ttol_loser, ttol_result = game['session_b'], game['session_a'], 'win_b'
+    models.save_game_result(
+        game_type='ttol', session_a=game['session_a'], session_b=game['session_b'],
+        winner_session=ttol_winner, loser_session=ttol_loser, result=ttol_result,
+        mode=game['mode'], details={'a_correct': a_correct, 'b_correct': b_correct}
+    )
     print(f"TTOL game {game_id}: A_correct={a_correct} B_correct={b_correct}")
 
 def start_guess_phase(game_id):

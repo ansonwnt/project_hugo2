@@ -9,14 +9,24 @@
         <div class="header-left">
             <span class="your-name" id="my-name">-</span>
         </div>
-        <button id="checkout-btn" class="btn btn-small btn-outline">Check Out</button>
+        <div class="header-right">
+            <a href="/activity" class="btn-icon" title="My Activity">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <polyline points="12 6 12 12 16 14"/>
+                </svg>
+            </a>
+            <button id="checkout-btn" class="btn btn-small btn-outline">Check Out</button>
+        </div>
     </header>
 
-    <!-- Notification permission banner -->
+    <!-- Notification permission banner (persistent) -->
     <div id="notif-banner" class="notif-banner hidden">
-        <span>Enable notifications to know when you get a drink</span>
-        <button id="notif-enable-btn" class="btn btn-small btn-primary">Enable</button>
-        <button id="notif-dismiss-btn" class="notif-dismiss">&times;</button>
+        <div class="notif-banner-content">
+            <span class="notif-banner-icon">🔔</span>
+            <span id="notif-banner-text">Notifications are off — you'll miss drink offers and game invites!</span>
+        </div>
+        <button id="notif-enable-btn" class="btn btn-small btn-primary">Turn On</button>
     </div>
 
     <!-- Connection status -->
@@ -445,12 +455,12 @@
 {% block scripts %}
 <script>
     // Check session
-    const sessionId = localStorage.getItem('pakybSession');
+    const sessionId = localStorage.getItem('shamrockSession');
     if (!sessionId) {
         window.location.href = '/';
     }
 
-    const myName = localStorage.getItem('pakybProfileName') || 'You';
+    const myName = localStorage.getItem('shamrockProfileName') || 'You';
     document.getElementById('my-name').textContent = myName;
 
     let targetSession = null;
@@ -463,23 +473,61 @@
         return p ? p.name : 'Someone';
     }
 
-    // ===== Browser Notifications =====
-    if ('Notification' in window && Notification.permission === 'default') {
-        document.getElementById('notif-banner').classList.remove('hidden');
-        document.getElementById('notif-enable-btn').addEventListener('click', () => {
-            Notification.requestPermission().then((perm) => {
-                document.getElementById('notif-banner').classList.add('hidden');
-                if (perm === 'granted') {
-                    navigator.serviceWorker.ready.then(reg => {
-                        reg.showNotification('pak.yourbro', { body: 'Notifications enabled! 🎉', icon: '/static/icon-192.png' });
-                    });
+    // ===== Browser Notifications (persistent banner) =====
+    (function() {
+        const banner = document.getElementById('notif-banner');
+        const enableBtn = document.getElementById('notif-enable-btn');
+        const bannerText = document.getElementById('notif-banner-text');
+
+        function updateBanner() {
+            if (!('Notification' in window)) return; // not supported
+            if (Notification.permission === 'granted') {
+                banner.classList.add('hidden');
+                return;
+            }
+            if (Notification.permission === 'denied') {
+                bannerText.textContent = "Notifications are blocked — you'll miss drink offers and game invites!";
+                enableBtn.textContent = 'Fix It';
+                banner.classList.remove('hidden');
+            } else {
+                // 'default' — can still request
+                bannerText.textContent = "Notifications are off — you'll miss drink offers and game invites!";
+                enableBtn.textContent = 'Turn On';
+                banner.classList.remove('hidden');
+            }
+        }
+
+        enableBtn.addEventListener('click', () => {
+            if (Notification.permission === 'denied') {
+                // Can't re-request, show instructions
+                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+                const isAndroid = /Android/.test(navigator.userAgent);
+                let msg = '';
+                if (isIOS) {
+                    msg = 'Go to Settings → Safari → Notifications → turn ON';
+                } else if (isAndroid) {
+                    msg = 'Tap the lock icon in the address bar → Permissions → Allow notifications';
+                } else {
+                    msg = 'Click the lock icon next to the URL → Notifications → Allow';
                 }
-            });
+                alert(msg);
+            } else {
+                Notification.requestPermission().then((perm) => {
+                    if (perm === 'granted') {
+                        banner.classList.add('hidden');
+                        if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+                            navigator.serviceWorker.ready.then(reg => {
+                                reg.showNotification('Shamrock', { body: 'Notifications enabled! 🎉', icon: '/static/icon-192.png' });
+                            });
+                        }
+                    }
+                    updateBanner();
+                });
+            }
         });
-        document.getElementById('notif-dismiss-btn').addEventListener('click', () => {
-            document.getElementById('notif-banner').classList.add('hidden');
-        });
-    }
+
+        updateBanner();
+    })();
 
     function sendBrowserNotification(title, body) {
         if ('Notification' in window && Notification.permission === 'granted' && document.hidden) {
@@ -529,18 +577,18 @@
     });
 
     socket.on('rejoin_failed', () => {
-        localStorage.removeItem('pakybSession');
-        localStorage.removeItem('pakybProfileName');
-        localStorage.removeItem('pakybProfilePhoto');
-        localStorage.removeItem('pakybColorFrame');
+        localStorage.removeItem('shamrockSession');
+        localStorage.removeItem('shamrockProfileName');
+        localStorage.removeItem('shamrockProfilePhoto');
+        localStorage.removeItem('shamrockColorFrame');
         window.location.href = '/';
     });
 
     socket.on('kicked', () => {
-        localStorage.removeItem('pakybSession');
-        localStorage.removeItem('pakybProfileName');
-        localStorage.removeItem('pakybProfilePhoto');
-        localStorage.removeItem('pakybColorFrame');
+        localStorage.removeItem('shamrockSession');
+        localStorage.removeItem('shamrockProfileName');
+        localStorage.removeItem('shamrockProfilePhoto');
+        localStorage.removeItem('shamrockColorFrame');
         window.location.href = '/';
     });
 
@@ -744,12 +792,12 @@
 
     // ===== Checkout =====
     document.getElementById('checkout-btn').addEventListener('click', () => {
-        showConfirm('Leave pak.yourbro?', () => {
+        showConfirm('Leave Shamrock?', () => {
             socket.emit('checkout', { session_id: sessionId });
-            localStorage.removeItem('pakybSession');
-            localStorage.removeItem('pakybProfileName');
-            localStorage.removeItem('pakybProfilePhoto');
-            localStorage.removeItem('pakybColorFrame');
+            localStorage.removeItem('shamrockSession');
+            localStorage.removeItem('shamrockProfileName');
+            localStorage.removeItem('shamrockProfilePhoto');
+            localStorage.removeItem('shamrockColorFrame');
             window.location.href = '/';
         }, 'Check Out', 'Stay');
     });
@@ -952,10 +1000,10 @@
             resultDrink.classList.remove('hidden', 'drink-winner', 'drink-loser');
             if (data.result === 'win') {
                 resultDrink.classList.add('drink-winner');
-                resultDrink.textContent = `Go to the bar to collect your drink from ${userName(data.loser)}!`;
+                resultDrink.textContent = `Go to the bar to collect your drink from ${userName(data.loser)}, or simply just meet up!`;
             } else {
                 resultDrink.classList.add('drink-loser');
-                resultDrink.textContent = `Go to the bar now and buy ${userName(data.winner)} a drink!`;
+                resultDrink.textContent = `Go to the bar now and buy ${userName(data.winner)} a drink, or simply just meet up!`;
             }
         } else {
             resultDrink.classList.add('hidden');
@@ -1145,10 +1193,10 @@
             resultDrink.classList.remove('hidden', 'drink-winner', 'drink-loser');
             if (data.result === 'win') {
                 resultDrink.classList.add('drink-winner');
-                resultDrink.textContent = `Go to the bar to collect your drink from ${userName(data.loser)}!`;
+                resultDrink.textContent = `Go to the bar to collect your drink from ${userName(data.loser)}, or simply just meet up!`;
             } else {
                 resultDrink.classList.add('drink-loser');
-                resultDrink.textContent = `Go to the bar now and buy ${userName(data.winner)} a drink!`;
+                resultDrink.textContent = `Go to the bar now and buy ${userName(data.winner)} a drink, or simply just meet up!`;
             }
         } else {
             resultDrink.classList.add('hidden');
@@ -1366,10 +1414,10 @@
             resultDrink.classList.remove('hidden', 'drink-winner', 'drink-loser');
             if (data.result === 'win') {
                 resultDrink.classList.add('drink-winner');
-                resultDrink.textContent = `Go to the bar to collect your drink from ${userName(data.loser)}!`;
+                resultDrink.textContent = `Go to the bar to collect your drink from ${userName(data.loser)}, or simply just meet up!`;
             } else if (data.result === 'lose') {
                 resultDrink.classList.add('drink-loser');
-                resultDrink.textContent = `Go to the bar now and buy ${userName(data.winner)} a drink!`;
+                resultDrink.textContent = `Go to the bar now and buy ${userName(data.winner)} a drink, or simply just meet up!`;
             } else {
                 resultDrink.textContent = `It's a tie — no one pays!`;
             }
@@ -1739,10 +1787,10 @@
             resultDrink.classList.remove('hidden', 'drink-winner', 'drink-loser');
             if (data.result === 'win') {
                 resultDrink.classList.add('drink-winner');
-                resultDrink.textContent = `Go to the bar to collect your drink from ${userName(data.loser)}!`;
+                resultDrink.textContent = `Go to the bar to collect your drink from ${userName(data.loser)}, or simply just meet up!`;
             } else {
                 resultDrink.classList.add('drink-loser');
-                resultDrink.textContent = `Go to the bar now and buy ${userName(data.winner)} a drink!`;
+                resultDrink.textContent = `Go to the bar now and buy ${userName(data.winner)} a drink, or simply just meet up!`;
             }
         } else {
             resultDrink.classList.add('hidden');

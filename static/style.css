@@ -673,43 +673,154 @@ body {
     color: var(--text-primary);
 }
 
+/* ============== Notification Gate (post-profile) ============== */
+.notif-gate-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 60px 24px 40px;
+    min-height: 80vh;
+    animation: fadeIn 0.3s ease;
+}
+
+.notif-gate-icon {
+    color: var(--accent);
+    margin-bottom: 24px;
+    animation: bellShake 1s ease-in-out infinite;
+}
+
+@keyframes bellShake {
+    0%, 100% { transform: rotate(0deg); }
+    15% { transform: rotate(12deg); }
+    30% { transform: rotate(-10deg); }
+    45% { transform: rotate(8deg); }
+    60% { transform: rotate(-5deg); }
+    75% { transform: rotate(0deg); }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.notif-gate-title {
+    font-size: 26px;
+    font-weight: 700;
+    margin-bottom: 16px;
+}
+
+.notif-gate-text {
+    font-size: 17px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 8px;
+    max-width: 320px;
+}
+
+.notif-gate-urgency {
+    font-size: 14px;
+    color: var(--error);
+    font-weight: 600;
+    margin-bottom: 32px;
+}
+
+.notif-gate-btn {
+    font-size: 18px;
+    padding: 16px 32px;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.04); }
+}
+
+.notif-gate-status {
+    font-size: 0.9rem;
+    margin-top: 10px;
+    color: var(--text-secondary);
+}
+
+.notif-gate-status.notif-granted {
+    color: var(--accent);
+    font-weight: 600;
+}
+
+.notif-gate-help {
+    margin-top: 16px;
+    background: var(--bg-tertiary);
+    border-radius: var(--border-radius-sm);
+    padding: 14px 16px;
+    text-align: left;
+    max-width: 320px;
+}
+
+.notif-gate-help p {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin: 0;
+}
+
+.notif-gate-help strong {
+    color: var(--text-primary);
+}
+
+.notif-gate-skip {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 13px;
+    margin-top: 24px;
+    cursor: pointer;
+    opacity: 0.6;
+    padding: 8px 16px;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
 .hidden {
     display: none !important;
 }
 
-/* ============== Notification Banner ============== */
+/* ============== Notification Banner (persistent) ============== */
 .notif-banner {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    padding: 0.75rem 1.25rem;
-    background-color: var(--accent);
-    color: var(--bg-primary);
+    padding: 10px 16px;
+    background: linear-gradient(135deg, #dc2626, #ef4444);
+    color: #fff;
     font-size: 0.8125rem;
     font-weight: 500;
+    position: sticky;
+    top: 0;
+    z-index: 100;
 }
 
-.notif-banner span:first-child {
+.notif-banner-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     flex: 1;
+}
+
+.notif-banner-icon {
+    font-size: 1.1rem;
+    flex-shrink: 0;
 }
 
 .notif-banner .btn {
     flex-shrink: 0;
     font-size: 0.75rem;
-    padding: 0.375rem 0.75rem;
-    background-color: var(--bg-primary);
-    color: var(--text-primary);
+    padding: 6px 14px;
+    background-color: #fff;
+    color: #dc2626;
     border: none;
-}
-
-.notif-dismiss {
-    background: none;
-    border: none;
-    color: var(--bg-primary);
-    font-size: 1.25rem;
-    cursor: pointer;
-    padding: 0;
-    opacity: 0.7;
+    font-weight: 700;
+    border-radius: 20px;
 }
 
 /* ============== Header ============== */
@@ -4391,4 +4502,184 @@ body {
 
 .basket-pulse {
     animation: basketPulse 0.4s ease;
+}
+
+/* ============== Activity Page ============== */
+.activity-page {
+    min-height: 100vh;
+    background: var(--bg-primary);
+}
+
+.back-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    color: var(--text-primary);
+    text-decoration: none;
+    border-radius: 50%;
+    transition: background 0.2s;
+}
+
+.back-btn:active {
+    background: var(--bg-tertiary);
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.btn-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: transparent;
+    border: 1px solid var(--text-secondary);
+    border-radius: 50%;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+}
+
+.btn-icon:active {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.activity-filters {
+    display: flex;
+    gap: 8px;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--bg-tertiary);
+}
+
+.activity-filter {
+    padding: 6px 16px;
+    border: 1px solid var(--bg-tertiary);
+    background: transparent;
+    color: var(--text-secondary);
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+
+.activity-filter.active {
+    background: var(--accent);
+    color: var(--bg-primary);
+    border-color: var(--accent);
+}
+
+.activity-feed {
+    padding: 12px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.activity-card {
+    display: flex;
+    gap: 12px;
+    padding: 14px;
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--bg-tertiary);
+}
+
+.activity-card-left {
+    flex-shrink: 0;
+}
+
+.activity-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.activity-avatar-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    font-weight: 700;
+    font-size: 16px;
+}
+
+.activity-card-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.activity-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.activity-card-text {
+    font-size: 14px;
+    color: var(--text-primary);
+    line-height: 1.4;
+}
+
+.activity-card-time {
+    font-size: 12px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.activity-card-detail {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+}
+
+.activity-card-meta {
+    display: flex;
+    gap: 8px;
+    margin-top: 6px;
+    font-size: 12px;
+}
+
+.activity-card-status {
+    font-size: 12px;
+    font-weight: 600;
+    margin-top: 4px;
+}
+
+.status-accepted { color: var(--success); }
+.status-declined { color: var(--error); }
+.status-pending { color: var(--info); }
+
+.outcome-won { color: var(--success); font-weight: 600; }
+.outcome-lost { color: var(--error); font-weight: 600; }
+.outcome-tied { color: var(--info); font-weight: 600; }
+
+.activity-mode {
+    color: var(--text-secondary);
+}
+
+.activity-empty {
+    text-align: center;
+    color: var(--text-secondary);
+    padding: 60px 20px;
+    font-size: 15px;
+}
+
+.activity-loading {
+    text-align: center;
+    color: var(--text-secondary);
+    padding: 40px 20px;
 }

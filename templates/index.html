@@ -5,7 +5,7 @@
 {% block content %}
 <div class="landing-page">
     <div class="landing-header">
-        <h1 class="logo">pak.yourbro</h1>
+        <h1 class="logo">Shamrock</h1>
         <p class="tagline">Connect with people around you</p>
     </div>
 
@@ -38,7 +38,7 @@
                     <circle cx="30" cy="34" r="3" fill="currentColor"/>
                     <circle cx="50" cy="34" r="3" fill="currentColor"/>
                 </svg>
-                <h2>Welcome to pak.yourbro</h2>
+                <h2>Welcome to Shamrock</h2>
                 <p>The social app for this venue. See who else is here tonight, buy them a drink straight from the menu, or challenge them to a quick game.</p>
             </div>
             <!-- Slide 2: How it works -->
@@ -169,6 +169,27 @@
         </div>
     </div>
 
+    <!-- Step 2: Notification permission (after profile creation) -->
+    <div id="notif-gate-step" class="notif-gate-step hidden">
+        <div class="notif-gate-icon">
+            <svg viewBox="0 0 80 80" fill="none" width="80" height="80">
+                <path d="M40 8 v6" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+                <path d="M24 60 h32" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+                <path d="M20 60 C20 36, 22 24, 40 20 C58 24, 60 36, 60 60" stroke="currentColor" stroke-width="3"/>
+                <circle cx="40" cy="68" r="6" stroke="currentColor" stroke-width="2.5"/>
+            </svg>
+        </div>
+        <h2 class="notif-gate-title">One more thing!</h2>
+        <p class="notif-gate-text">Turn on notifications so you know when someone buys you a drink or invites you to play a game!</p>
+        <p class="notif-gate-urgency">Without notifications, you'll miss it!</p>
+        <button id="notif-gate-btn" class="btn btn-primary btn-large notif-gate-btn">Enable Notifications</button>
+        <div id="notif-gate-status" class="notif-gate-status hidden"></div>
+        <div id="notif-gate-help" class="notif-gate-help hidden">
+            <p id="notif-gate-help-text"></p>
+        </div>
+        <button id="notif-gate-skip" class="notif-gate-skip">Continue without notifications</button>
+    </div>
+
     <div id="error-message" class="error-message hidden"></div>
 </div>
 {% endblock %}
@@ -196,7 +217,7 @@
     let deferredPrompt = null;
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
 
-    if (!isStandalone && !localStorage.getItem('pakybDismissInstall')) {
+    if (!isStandalone && !localStorage.getItem('shamrockDismissInstall')) {
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
         const banner = document.getElementById('install-banner');
 
@@ -225,7 +246,7 @@
 
         document.getElementById('install-dismiss').addEventListener('click', () => {
             banner.classList.add('hidden');
-            localStorage.setItem('pakybDismissInstall', '1');
+            localStorage.setItem('shamrockDismissInstall', '1');
         });
     }
 
@@ -248,7 +269,7 @@
         }
 
         function finishOnboarding() {
-            localStorage.setItem('pakybOnboarded', '1');
+            localStorage.setItem('shamrockOnboarded', '1');
             document.getElementById('onboarding-step').classList.add('hidden');
             document.getElementById('profile-step').classList.remove('hidden');
         }
@@ -352,7 +373,7 @@
                         // Show a test notification
                         if (navigator.serviceWorker && navigator.serviceWorker.controller) {
                             navigator.serviceWorker.ready.then(function(reg) {
-                                reg.showNotification('pak.yourbro', { body: 'Notifications enabled! You won\'t miss a thing.', icon: '/static/icon-192.png' });
+                                reg.showNotification('Shamrock', { body: 'Notifications enabled! You won\'t miss a thing.', icon: '/static/icon-192.png' });
                             });
                         }
                     } else if (perm === 'denied') {
@@ -380,8 +401,8 @@
     })();
 
     // ===== Flow control =====
-    const existingSession = localStorage.getItem('pakybSession');
-    const hasOnboarded = localStorage.getItem('pakybOnboarded');
+    const existingSession = localStorage.getItem('shamrockSession');
+    const hasOnboarded = localStorage.getItem('shamrockOnboarded');
 
     if (existingSession) {
         // Already has a session — go straight to people page
@@ -516,15 +537,21 @@
             const res = await fetch('/api/profile', { method: 'POST', body: formData });
             const data = await res.json();
             if (data.success) {
-                localStorage.setItem('pakybSession', sessionId);
-                localStorage.setItem('pakybProfileName', name);
+                localStorage.setItem('shamrockSession', sessionId);
+                localStorage.setItem('shamrockProfileName', name);
                 if (data.photo_url) {
-                    localStorage.setItem('pakybProfilePhoto', data.photo_url);
+                    localStorage.setItem('shamrockProfilePhoto', data.photo_url);
                 }
                 if (data.color_frame) {
-                    localStorage.setItem('pakybColorFrame', data.color_frame);
+                    localStorage.setItem('shamrockColorFrame', data.color_frame);
                 }
-                window.location.href = '/people';
+                // Show notification gate if permission not yet granted
+                if ('Notification' in window && Notification.permission === 'default') {
+                    document.getElementById('profile-step').classList.add('hidden');
+                    showNotifGate();
+                } else {
+                    window.location.href = '/people';
+                }
             } else {
                 const errorEl = document.getElementById('error-message');
                 errorEl.textContent = data.error || 'Failed to save profile';
@@ -539,5 +566,68 @@
             nextBtn.textContent = "Let's Go";
         }
     });
+
+    // ===== Notification Gate (after profile creation) =====
+    function showNotifGate() {
+        const gate = document.getElementById('notif-gate-step');
+        gate.classList.remove('hidden');
+
+        const btn = document.getElementById('notif-gate-btn');
+        const skipBtn = document.getElementById('notif-gate-skip');
+        const statusEl = document.getElementById('notif-gate-status');
+        const helpEl = document.getElementById('notif-gate-help');
+        const helpText = document.getElementById('notif-gate-help-text');
+
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        const isAndroid = /Android/.test(navigator.userAgent);
+
+        btn.addEventListener('click', () => {
+            Notification.requestPermission().then((perm) => {
+                if (perm === 'granted') {
+                    btn.textContent = 'Notifications Enabled!';
+                    btn.disabled = true;
+                    statusEl.textContent = "You're all set!";
+                    statusEl.classList.remove('hidden');
+                    statusEl.classList.add('notif-granted');
+                    if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+                        navigator.serviceWorker.ready.then((reg) => {
+                            reg.showNotification('Shamrock', {
+                                body: "Notifications on! You won't miss a thing.",
+                                icon: '/static/icon-192.png'
+                            });
+                        });
+                    }
+                    setTimeout(() => { window.location.href = '/people'; }, 1200);
+                } else if (perm === 'denied') {
+                    btn.textContent = 'Blocked';
+                    btn.disabled = true;
+                    btn.style.opacity = '0.5';
+                    helpEl.classList.remove('hidden');
+                    if (isIOS) {
+                        helpText.innerHTML =
+                            '<strong>Permission was denied.</strong> To fix:<br>' +
+                            '1. Open <strong>Settings</strong> on your device<br>' +
+                            '2. Scroll down to <strong>Safari</strong><br>' +
+                            '3. Tap <strong>Notifications</strong> → toggle ON';
+                    } else if (isAndroid) {
+                        helpText.innerHTML =
+                            '<strong>Permission was denied.</strong> To fix:<br>' +
+                            '1. Tap the <strong>lock icon</strong> in the address bar<br>' +
+                            '2. Tap <strong>Permissions</strong><br>' +
+                            '3. Set Notifications to <strong>Allow</strong>';
+                    } else {
+                        helpText.innerHTML =
+                            '<strong>Permission was denied.</strong> To fix:<br>' +
+                            '1. Click the <strong>lock icon</strong> next to the URL<br>' +
+                            '2. Find <strong>Notifications</strong> → change to <strong>Allow</strong>';
+                    }
+                }
+            });
+        });
+
+        skipBtn.addEventListener('click', () => {
+            window.location.href = '/people';
+        });
+    }
 </script>
 {% endblock %}

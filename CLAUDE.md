@@ -1,4 +1,4 @@
-# Project Hugo
+# Project Shamrock
 
 ## Overview
 <!-- Describe what this project does -->
@@ -8,7 +8,7 @@
 
 ## Project Structure
 ```
-Hugo/
+Shamrock/
 ├── main.py          # Entry point
 ├── requirements.txt # Dependencies
 └── CLAUDE.md        # This file

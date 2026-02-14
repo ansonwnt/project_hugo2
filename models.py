@@ -1,9 +1,10 @@
 import sqlite3
+import json
 from contextlib import contextmanager
 from datetime import datetime
 import os
 
-DATABASE = 'pakyb.db'
+DATABASE = 'shamrock.db'
 
 @contextmanager
 def get_db():
@@ -343,6 +344,71 @@ def clear_activity_log():
         cursor = conn.cursor()
         cursor.execute('DELETE FROM activity_log')
         conn.commit()
+
+
+# ============== Game Results ==============
+
+def init_game_results_table():
+    """Create game_results table if it doesn't exist."""
+    with get_db() as conn:
+        cursor = conn.cursor()
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS game_results (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                game_type TEXT NOT NULL,
+                session_a TEXT NOT NULL,
+                session_b TEXT NOT NULL,
+                winner_session TEXT,
+                loser_session TEXT,
+                result TEXT NOT NULL,
+                mode TEXT DEFAULT 'fun',
+                details TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        conn.commit()
+
+def save_game_result(game_type, session_a, session_b, winner_session, loser_session, result, mode='fun', details=None):
+    """Save a game result."""
+    details_json = json.dumps(details) if details else None
+    try:
+        with get_db() as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                INSERT INTO game_results (game_type, session_a, session_b, winner_session, loser_session, result, mode, details)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (game_type, session_a, session_b, winner_session, loser_session, result, mode, details_json))
+            conn.commit()
+    except sqlite3.Error:
+        pass
+
+def get_user_game_results(session_id, limit=50):
+    """Get all game results involving a specific user."""
+    try:
+        with get_db() as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT * FROM game_results
+                WHERE session_a = ? OR session_b = ?
+                ORDER BY created_at DESC LIMIT ?
+            ''', (session_id, session_id, limit))
+            return [dict(row) for row in cursor.fetchall()]
+    except sqlite3.Error:
+        return []
+
+def get_user_messages(session_id, limit=50):
+    """Get all messages (drinks) sent or received by a user."""
+    try:
+        with get_db() as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT * FROM messages
+                WHERE from_session = ? OR to_session = ?
+                ORDER BY created_at DESC LIMIT ?
+            ''', (session_id, session_id, limit))
+            return [dict(row) for row in cursor.fetchall()]
+    except sqlite3.Error:
+        return []
 
 
 # ============== Drink Stats ==============

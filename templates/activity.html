@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+
+{% block title %}My Activity{% endblock %}
+
+{% block content %}
+<div class="activity-page">
+    <header class="header">
+        <a href="/people" class="back-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="15 18 9 12 15 6"/>
+            </svg>
+        </a>
+        <span class="header-title">My Activity</span>
+        <div style="width: 36px;"></div>
+    </header>
+
+    <div class="activity-filters">
+        <button class="activity-filter active" data-filter="all">All</button>
+        <button class="activity-filter" data-filter="drink">Drinks</button>
+        <button class="activity-filter" data-filter="game">Games</button>
+    </div>
+
+    <div id="activity-feed" class="activity-feed"></div>
+
+    <p id="activity-empty" class="activity-empty hidden">
+        No activity yet. Go meet someone!
+    </p>
+
+    <div id="activity-loading" class="activity-loading">
+        Loading...
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function() {
+    const sessionId = localStorage.getItem('shamrockSession');
+    if (!sessionId) {
+        window.location.href = '/';
+        return;
+    }
+
+    let allActivity = [];
+
+    function esc(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    function capitalize(s) {
+        return s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
+    }
+
+    function timeAgo(dateStr) {
+        if (!dateStr) return '';
+        const now = new Date();
+        const date = new Date(dateStr + 'Z');
+        const diff = Math.floor((now - date) / 1000);
+        if (diff < 60) return 'just now';
+        if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+        if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+        return Math.floor(diff / 86400) + 'd ago';
+    }
+
+    function renderDrinkCard(item) {
+        const directionText = item.direction === 'sent'
+            ? `You offered <strong>${esc(item.other_name)}</strong> a drink`
+            : `<strong>${esc(item.other_name)}</strong> offered you a drink`;
+
+        const statusClass = {
+            'accepted': 'status-accepted',
+            'declined': 'status-declined',
+            'pending': 'status-pending'
+        }[item.status] || '';
+
+        const statusLabel = {
+            'accepted': 'Accepted',
+            'declined': 'Declined',
+            'pending': 'Pending'
+        }[item.status] || item.status;
+
+        const avatarHtml = item.other_photo
+            ? `<img class="activity-avatar" src="${item.other_photo}" alt="">`
+            : `<div class="activity-avatar activity-avatar-placeholder">${esc(item.other_name[0])}</div>`;
+
+        return `
+            <div class="activity-card" data-type="drink">
+                <div class="activity-card-left">${avatarHtml}</div>
+                <div class="activity-card-body">
+                    <div class="activity-card-header">
+                        <span class="activity-card-text">${directionText}</span>
+                        <span class="activity-card-time">${timeAgo(item.created_at)}</span>
+                    </div>
+                    <div class="activity-card-status ${statusClass}">${statusLabel}</div>
+                </div>
+            </div>
+        `;
+    }
+
+    function renderGameCard(item) {
+        const gameNames = {rps: 'Rock Paper Scissors', bomb: 'Bomb Pass', tap: 'Tap Race', ttol: '2 Truths 1 Lie'};
+        const gameIcons = {rps: '✊', bomb: '💣', tap: '👆', ttol: '🤥'};
+        const outcomeVerbs = {won: 'beat', lost: 'lost to', tied: 'tied with'};
+
+        const icon = gameIcons[item.game_type] || '🎮';
+        const verb = outcomeVerbs[item.outcome] || 'played';
+        const gameName = gameNames[item.game_type] || item.game_type;
+
+        let detailText = gameName;
+        if (item.game_type === 'rps' && item.details) {
+            const choiceEmoji = {rock: '✊', paper: '✋', scissors: '✌️'};
+            const ca = choiceEmoji[item.details.choice_a] || '?';
+            const cb = choiceEmoji[item.details.choice_b] || '?';
+            detailText = `${gameName} — ${ca} vs ${cb}`;
+        } else if (item.game_type === 'tap' && item.details) {
+            detailText = `${gameName} — ${item.details.count_a} vs ${item.details.count_b} taps`;
+        }
+
+        const outcomeClass = `outcome-${item.outcome}`;
+        const modeText = item.mode === 'drink' ? 'For a drink' : 'Just for fun';
+
+        const avatarHtml = item.other_photo
+            ? `<img class="activity-avatar" src="${item.other_photo}" alt="">`
+            : `<div class="activity-avatar activity-avatar-placeholder">${esc(item.other_name[0])}</div>`;
+
+        return `
+            <div class="activity-card" data-type="game">
+                <div class="activity-card-left">${avatarHtml}</div>
+                <div class="activity-card-body">
+                    <div class="activity-card-header">
+                        <span class="activity-card-text">
+                            ${icon} You ${verb} <strong>${esc(item.other_name)}</strong>
+                        </span>
+                        <span class="activity-card-time">${timeAgo(item.created_at)}</span>
+                    </div>
+                    <div class="activity-card-detail">${detailText}</div>
+                    <div class="activity-card-meta">
+                        <span class="${outcomeClass}">${capitalize(item.outcome)}</span>
+                        <span class="activity-mode">${modeText}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    function renderActivity(items) {
+        const feed = document.getElementById('activity-feed');
+        const empty = document.getElementById('activity-empty');
+
+        if (items.length === 0) {
+            feed.innerHTML = '';
+            empty.classList.remove('hidden');
+            return;
+        }
+        empty.classList.add('hidden');
+
+        feed.innerHTML = items.map(item => {
+            if (item.type === 'drink') return renderDrinkCard(item);
+            return renderGameCard(item);
+        }).join('');
+    }
+
+    // Filter tabs
+    document.querySelectorAll('.activity-filter').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.activity-filter').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const filter = btn.dataset.filter;
+            if (filter === 'all') {
+                renderActivity(allActivity);
+            } else {
+                renderActivity(allActivity.filter(item => item.type === filter));
+            }
+        });
+    });
+
+    // Fetch activity
+    fetch(`/api/activity/${sessionId}`)
+        .then(res => res.json())
+        .then(data => {
+            allActivity = data;
+            document.getElementById('activity-loading').classList.add('hidden');
+            renderActivity(data);
+        })
+        .catch(() => {
+            document.getElementById('activity-loading').textContent = 'Failed to load activity.';
+        });
+})();
+</script>
+{% endblock %}
